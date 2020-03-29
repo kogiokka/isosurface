@@ -4,10 +4,14 @@
 int
 main(int argc, char** argv)
 {
-  Scene scene;
-  scene.Init();
-  scene.SetupOpenGL();
-  scene.Render();
+  Isosurface isosurface;
+  isosurface.ReadRawInfo("data/engine.inf");
+  isosurface.ReadRaw("data/engine.raw");
+
+  // Scene scene;
+  // scene.Init();
+  // scene.SetupOpenGL();
+  // scene.Render();
 
   return 0;
 }
