@@ -157,6 +157,13 @@ Isosurface::MarchingCube()
           vert_list[11] = InterpolatedVertex(e1, e2);
           grad_list[11] = InterpolatedNormal(e1, e2);
         }
+
+        for (int i = 0; i < 16; ++i) {
+          if (table::kTriTable[cube_index][i] < 0)
+            break;
+          vertices_.push_back(vert_list.at(table::kTriTable[cube_index][i]));
+          normals_.push_back(grad_list.at(table::kTriTable[cube_index][i]));
+        }
       }
     }
   }
