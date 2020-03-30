@@ -162,19 +162,13 @@ Isosurface::MarchingCube()
         for (int i = 0; i < 16; ++i) {
           if (table::kTriTable.at(cube_index)[i] < 0)
             break;
-          render_data_.push_back(
-            vert_list.at(table::kTriTable.at(cube_index).at(i)).x);
-          render_data_.push_back(
-            vert_list.at(table::kTriTable.at(cube_index).at(i)).y);
-          render_data_.push_back(
-            vert_list.at(table::kTriTable.at(cube_index).at(i)).z);
-          render_data_.push_back(
-            grad_list.at(table::kTriTable.at(cube_index).at(i)).x);
-          render_data_.push_back(
-            grad_list.at(table::kTriTable.at(cube_index).at(i)).y);
-          render_data_.push_back(
-            grad_list.at(table::kTriTable.at(cube_index).at(i)).z);
-          ++vertex_count_;
+          render_data_.push_back(vert_list[table::kTriTable[cube_index][i]].x);
+          render_data_.push_back(vert_list[table::kTriTable[cube_index][i]].y);
+          render_data_.push_back(vert_list[table::kTriTable[cube_index][i]].z);
+          render_data_.push_back(grad_list[table::kTriTable[cube_index][i]].x);
+          render_data_.push_back(grad_list[table::kTriTable[cube_index][i]].y);
+          render_data_.push_back(grad_list[table::kTriTable[cube_index][i]].z);
+          vertex_count_ += 3;
         }
       }
     }
@@ -182,7 +176,7 @@ Isosurface::MarchingCube()
 }
 
 glm::vec3
-Isosurface::InterpolatedVertex(glm::vec3 idx1, glm::vec3 idx2)
+Isosurface::InterpolatedVertex(glm::vec3 const& idx1, glm::vec3 const& idx2)
 {
   float const value1 = Value(idx1.x, idx1.y, idx1.z);
   float const value2 = Value(idx2.x, idx2.y, idx2.z);
@@ -197,7 +191,7 @@ Isosurface::InterpolatedVertex(glm::vec3 idx1, glm::vec3 idx2)
 }
 
 glm::vec3
-Isosurface::InterpolatedNormal(glm::vec3 idx1, glm::vec3 idx2)
+Isosurface::InterpolatedNormal(glm::vec3 const& idx1, glm::vec3 const& idx2)
 {
   float const value1 = Value(idx1.x, idx1.y, idx1.z);
   float const value2 = Value(idx2.x, idx2.y, idx2.z);
@@ -250,19 +244,19 @@ Isosurface::Index(int x, int y, int z) const
   return x + y * xsize + z * ysize * xsize;
 }
 
-float
+inline float
 Isosurface::CenteredDifference(unsigned short front, unsigned short back) const
 {
   return static_cast<float>(back - front) / 2 * h_;
 }
 
-float
+inline float
 Isosurface::BackwardDifference(unsigned short self, unsigned short back) const
 {
   return static_cast<float>(back - self) / h_;
 }
 
-float
+inline float
 Isosurface::ForwardDifference(unsigned short self, unsigned short front) const
 {
   return BackwardDifference(front, self);

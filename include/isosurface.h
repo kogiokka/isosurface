@@ -46,13 +46,13 @@ public:
   unsigned int RenderVertexCount() const;
 
 private:
-  float CenteredDifference(unsigned short front, unsigned short back) const;
-  float ForwardDifference(unsigned short self, unsigned short front) const;
-  float BackwardDifference(unsigned short self, unsigned short back) const;
-  glm::vec3 InterpolatedVertex(glm::vec3 idx1, glm::vec3 idx2);
-  glm::vec3 InterpolatedNormal(glm::vec3 idx1, glm::vec3 idx2);
+  glm::vec3 InterpolatedVertex(glm::vec3 const& idx1, glm::vec3 const& idx2);
+  glm::vec3 InterpolatedNormal(glm::vec3 const& idx1, glm::vec3 const& idx2);
 
 private:
+  inline float CenteredDifference(unsigned short front, unsigned short back) const;
+  inline float ForwardDifference(unsigned short self, unsigned short front) const;
+  inline float BackwardDifference(unsigned short self, unsigned short back) const;
   inline unsigned short Value(int x, int y, int z) const;
   inline glm::vec3 const& Gradient(int x, int y, int z) const;
   inline int Index(int x, int y, int z) const;

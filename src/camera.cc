@@ -5,10 +5,10 @@ Camera::Camera()
   , target_{ 0.f, 0.f, 0.f }
   , theta_(0.3f)
   , phi_(1.4f)
-  , radius_(800.f)
+  , radius_(600.f)
   , aspect_ratio_(0.f)
   , view_volume_size_(200.f)
-  , move_rate_(0.01f)
+  , move_rate_(0.1f)
   , rotate_rate_(0.01f)
   , zoom_(0.8f)
 {
