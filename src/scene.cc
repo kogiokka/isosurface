@@ -11,6 +11,7 @@ void
 Scene::Render()
 {
   shader_->SetVector3("light_color", 1.f, 1.f, 1.f);
+  shader_->SetVector3("object_color", 0.f, 0.5f, 1.f);
 
   while (!quit_) {
     SDL_Event event;
@@ -63,28 +64,29 @@ Scene::Render()
 }
 
 void
-Scene::SetupOpenGL()
+Scene::SetupOpenGL(unsigned int count, float const* data)
 {
-  GLuint vao, vbo;
+  assert(count != 0);
+
+  vertex_count_ = count;
+  GLuint vao;
   unsigned int stride = 3 * sizeof(float);
-  unsigned int cube36_data_size = cube::cube36.size() * sizeof(float);
-  vertex_count_ = 3 * 2 * 6 * 3;
 
   glCreateVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-  glCreateBuffers(1, &vbo);
-  glNamedBufferStorage(vbo, cube36_data_size, nullptr, GL_DYNAMIC_STORAGE_BIT);
-  glNamedBufferSubData(vbo, 0, cube36_data_size, cube::cube36.data());
-  glBindBuffer(GL_VERTEX_ARRAY, vbo);
-  glVertexArrayVertexBuffer(vao, 0, vbo, 0, stride);
-  glVertexArrayVertexBuffer(vao, 1, vbo, vertex_count_ * sizeof(float), stride);
-  glVertexArrayVertexBuffer(vao, 2, vbo, 2 * vertex_count_ * sizeof(float), stride);
+  glCreateBuffers(1, &vbo_);
+  glNamedBufferStorage(vbo_, 2 * count * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
+  glNamedBufferSubData(vbo_, 0, 2 * count * sizeof(float), data);
+
+  // Interleaved data
+  glVertexArrayVertexBuffer(vao, 0, vbo_, 0, stride * 2);
+  glVertexArrayVertexBuffer(vao, 1, vbo_, stride, stride * 2);
   glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
-  glVertexArrayAttribFormat(vao, 1, 3, GL_FLOAT, GL_FALSE, 0);
-  glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE, 0);
+  glVertexArrayAttribFormat(vao, 1, 3, GL_FLOAT, GL_FALSE, stride);
+
+  glBindBuffer(GL_VERTEX_ARRAY, vbo_);
+
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
-  glEnableVertexAttribArray(2);
 
   shader_.reset(new Shader());
   shader_->Attach(GL_VERTEX_SHADER, "shader/default.vert");

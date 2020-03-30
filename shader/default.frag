@@ -2,13 +2,13 @@
 
 in vec3 attr_pos;
 in vec3 attr_normal;
-in vec3 attr_color;
 
 out vec4 color;
 
 uniform vec3 light_src;
 uniform vec3 light_color;
 uniform vec3 view_pos;
+uniform vec3 object_color;
 
 void main()
 {
@@ -27,5 +27,5 @@ void main()
   float specular_I = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
   vec3 specular = specular_coef * specular_I * light_color;
 
-  color = vec4((ambient + diffusion + specular) * attr_color, 1.0);
+  color = vec4((ambient + diffusion + specular) * object_color, 1.0);
 }

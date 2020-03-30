@@ -3,6 +3,7 @@
 Isosurface::Isosurface()
   : h_(1.f)
   , target_value_(90)
+  , vertex_count_(0)
 {}
 
 Isosurface::~Isosurface() {}
@@ -54,33 +55,33 @@ Isosurface::MarchingCube()
   int const xsize = dimensions_[0];
   int const ysize = dimensions_[1];
   int const zsize = dimensions_[2];
-  unsigned short cube_index = 0;
 
-  vertices_.reserve(xsize * ysize * zsize);
-  normals_.reserve(xsize * ysize * zsize);
+  render_data_.reserve(xsize * ysize * zsize * 2);
 
-  for (int z = 0; z < zsize; z += 2) {
-    for (int y = 0; y < ysize; y += 2) {
-      for (int x = 0; x < xsize; x += 2) {
+  for (int z = 0; z < zsize - 2; z += 2) {
+    for (int y = 0; y < ysize - 2; y += 2) {
+      for (int x = 0; x < xsize - 2; x += 2) {
+        unsigned short cube_index = 0;
         GridCell cell(x, y, z);
-        if (Value(x, y, z) < target_value_)
-          cube_index |= 0b0000'0001;
-        if (Value(x + 1, y, z) < target_value_)
-          cube_index |= 0b0000'0010;
-        if (Value(x + 1, y, z + 1) < target_value_)
-          cube_index |= 0b0000'0100;
-        if (Value(x, y, z + 1) < target_value_)
-          cube_index |= 0b0000'1000;
-        if (Value(x, y + 1, z) < target_value_)
-          cube_index |= 0b0001'0000;
-        if (Value(x + 1, y + 1, z) < target_value_)
-          cube_index |= 0b0010'0000;
-        if (Value(x + 1, y + 1, z + 1) < target_value_)
-          cube_index |= 0b0100'0000;
-        if (Value(x, y + 1, z + 1) < target_value_)
-          cube_index |= 0b1000'0000;
 
-        if (table::kEdgeTable[cube_index] == 0)
+        if (Value(x, y, z) < target_value_)
+          cube_index |= 1;
+        if (Value(x + 1, y, z) < target_value_)
+          cube_index |= 2;
+        if (Value(x + 1, y, z + 1) < target_value_)
+          cube_index |= 4;
+        if (Value(x, y, z + 1) < target_value_)
+          cube_index |= 8;
+        if (Value(x, y + 1, z) < target_value_)
+          cube_index |= 16;
+        if (Value(x + 1, y + 1, z) < target_value_)
+          cube_index |= 32;
+        if (Value(x + 1, y + 1, z + 1) < target_value_)
+          cube_index |= 64;
+        if (Value(x, y + 1, z + 1) < target_value_)
+          cube_index |= 128;
+
+        if (table::kEdgeTable.at(cube_index) == 0)
           continue;
 
         std::array<glm::vec3, 12> vert_list;
@@ -131,7 +132,7 @@ Isosurface::MarchingCube()
           glm::vec3 const e1 = cell.VoxelIndex(7);
           glm::vec3 const e2 = cell.VoxelIndex(4);
           vert_list[7] = InterpolatedVertex(e1, e2);
-          grad_list[y] = InterpolatedNormal(e1, e2);
+          grad_list[7] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 256) {
           glm::vec3 const e1 = cell.VoxelIndex(0);
@@ -159,10 +160,21 @@ Isosurface::MarchingCube()
         }
 
         for (int i = 0; i < 16; ++i) {
-          if (table::kTriTable[cube_index][i] < 0)
+          if (table::kTriTable.at(cube_index)[i] < 0)
             break;
-          vertices_.push_back(vert_list.at(table::kTriTable[cube_index][i]));
-          normals_.push_back(grad_list.at(table::kTriTable[cube_index][i]));
+          render_data_.push_back(
+            vert_list.at(table::kTriTable.at(cube_index).at(i)).x);
+          render_data_.push_back(
+            vert_list.at(table::kTriTable.at(cube_index).at(i)).y);
+          render_data_.push_back(
+            vert_list.at(table::kTriTable.at(cube_index).at(i)).z);
+          render_data_.push_back(
+            grad_list.at(table::kTriTable.at(cube_index).at(i)).x);
+          render_data_.push_back(
+            grad_list.at(table::kTriTable.at(cube_index).at(i)).y);
+          render_data_.push_back(
+            grad_list.at(table::kTriTable.at(cube_index).at(i)).z);
+          ++vertex_count_;
         }
       }
     }
@@ -194,6 +206,27 @@ Isosurface::InterpolatedNormal(glm::vec3 idx1, glm::vec3 idx2)
   glm::vec3 const& g1 = Gradient(idx1.x, idx1.y, idx1.z);
   glm::vec3 const& g2 = Gradient(idx2.x, idx2.y, idx2.z);
   return ratio * (g2 - g1) - g1;
+}
+
+void
+Isosurface::ReadRaw(std::string_view const filepath)
+{
+  assert(!dimensions_.empty());
+
+  std::ifstream file(filepath.data(), std::ios::binary);
+  if (file.fail()) {
+    fprintf(stderr, "Failed to read raw file.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  auto file_size = std::filesystem::file_size(filepath);
+
+  std::vector<char> tmp(file_size);
+  file.read(tmp.data(), file_size);
+  file.close();
+
+  isovalues_.assign(std::make_move_iterator(begin(tmp)),
+                    std::make_move_iterator(end(tmp)));
 }
 
 inline unsigned short
@@ -236,27 +269,6 @@ Isosurface::ForwardDifference(unsigned short self, unsigned short front) const
 }
 
 void
-Isosurface::ReadRaw(std::string_view const filepath)
-{
-  assert(!dimensions_.empty());
-
-  std::ifstream file(filepath.data(), std::ios::binary);
-  if (file.fail()) {
-    fprintf(stderr, "Failed to read raw file.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  auto file_size = std::filesystem::file_size(filepath);
-
-  std::vector<char> tmp(file_size);
-  file.read(tmp.data(), file_size);
-  file.close();
-
-  isovalues_.assign(std::make_move_iterator(begin(tmp)),
-                    std::make_move_iterator(end(tmp)));
-}
-
-void
 Isosurface::ReadRawInfo(std::string_view const filepath)
 {
   std::ifstream file(filepath.data(), std::ios::binary);
@@ -278,6 +290,18 @@ Isosurface::ReadRawInfo(std::string_view const filepath)
   while (std::getline(ss, dimen, ':')) {
     dimensions_.push_back(std::stoi(dimen));
   }
+}
+
+float const*
+Isosurface::RenderData() const
+{
+  return render_data_.data();
+}
+
+unsigned int
+Isosurface::RenderVertexCount() const
+{
+  return vertex_count_;
 }
 
 Isosurface::GridCell::GridCell(int x, int y, int z)

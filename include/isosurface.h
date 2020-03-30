@@ -16,11 +16,11 @@ class Isosurface
 {
   float const h_;
   unsigned int target_value_;
+  unsigned int vertex_count_;
   std::vector<int> dimensions_;
   std::vector<unsigned char> isovalues_;
   std::vector<glm::vec3> gradients_;
-  std::vector<glm::vec3> vertices_;
-  std::vector<glm::vec3> normals_;
+  std::vector<float> render_data_;
 
   class GridCell
   {
@@ -42,13 +42,15 @@ public:
   void ReadRaw(std::string_view const filepath);
   void CalculateGradient();
   void MarchingCube();
-  glm::vec3 InterpolatedVertex(glm::vec3 idx1, glm::vec3 idx2);
-  glm::vec3 InterpolatedNormal(glm::vec3 idx1, glm::vec3 idx2);
+  float const* RenderData() const;
+  unsigned int RenderVertexCount() const;
 
 private:
   float CenteredDifference(unsigned short front, unsigned short back) const;
   float ForwardDifference(unsigned short self, unsigned short front) const;
   float BackwardDifference(unsigned short self, unsigned short back) const;
+  glm::vec3 InterpolatedVertex(glm::vec3 idx1, glm::vec3 idx2);
+  glm::vec3 InterpolatedNormal(glm::vec3 idx1, glm::vec3 idx2);
 
 private:
   inline unsigned short Value(int x, int y, int z) const;

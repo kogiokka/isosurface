@@ -15,16 +15,17 @@ class Scene
   int height_;
   int vertex_count_;
   bool quit_;
-  SDL_GLContext context_;
-  Camera camera_;
+  GLuint vbo_;
   std::unique_ptr<SDL_Window, std::function<void(SDL_Window*)>> window_;
   std::unique_ptr<Shader> shader_;
+  Camera camera_;
+  SDL_GLContext context_;
 
 public:
   Scene();
   ~Scene();
   void Init();
-  void SetupOpenGL();
+  void SetupOpenGL(unsigned int count, float const* data);
   float AspectRatio() const;
   void Render();
   void KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key);
