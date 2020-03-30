@@ -1,11 +1,11 @@
 #pragma once
 
 #include <algorithm>
-#include <vector>
-#include <string_view>
-#include <sstream>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <string_view>
+#include <vector>
 
 #include "glm/glm.hpp"
 
@@ -21,6 +21,19 @@ class Isosurface
   std::vector<glm::vec3> vertices_;
   std::vector<glm::vec3> normals_;
 
+  class GridCell
+  {
+    int x_;
+    int y_;
+    int z_;
+    std::vector<glm::vec3> voxel_index_;
+
+  public:
+    GridCell(int x, int y, int z);
+    ~GridCell();
+    glm::vec3 const& VoxelIndex(int index) const;
+  };
+
 public:
   Isosurface();
   ~Isosurface();
@@ -35,7 +48,6 @@ private:
   float CenteredDifference(unsigned short front, unsigned short back) const;
   float ForwardDifference(unsigned short self, unsigned short front) const;
   float BackwardDifference(unsigned short self, unsigned short back) const;
-  glm::vec3 EdgeIndex(int index, int x, int y, int z) const;
 
 private:
   inline unsigned short Value(int x, int y, int z) const;

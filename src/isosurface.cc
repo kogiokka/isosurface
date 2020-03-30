@@ -62,6 +62,7 @@ Isosurface::MarchingCube()
   for (int z = 0; z < zsize; z += 2) {
     for (int y = 0; y < ysize; y += 2) {
       for (int x = 0; x < xsize; x += 2) {
+        GridCell cell(x, y, z);
         if (Value(x, y, z) < target_value_)
           cube_index |= 0b0000'0001;
         if (Value(x + 1, y, z) < target_value_)
@@ -83,74 +84,74 @@ Isosurface::MarchingCube()
           continue;
 
         if (table::kEdgeTable[cube_index] & 1) {
-          glm::vec3 const e1 = EdgeIndex(0, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(1, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(0);
+          glm::vec3 const e2 = cell.VoxelIndex(1);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 2) {
-          glm::vec3 const e1 = EdgeIndex(1, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(2, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(1);
+          glm::vec3 const e2 = cell.VoxelIndex(2);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 4) {
-          glm::vec3 const e1 = EdgeIndex(2, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(3, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(2);
+          glm::vec3 const e2 = cell.VoxelIndex(3);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 8) {
-          glm::vec3 const e1 = EdgeIndex(3, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(0, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(3);
+          glm::vec3 const e2 = cell.VoxelIndex(0);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 16) {
-          glm::vec3 const e1 = EdgeIndex(4, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(5, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(4);
+          glm::vec3 const e2 = cell.VoxelIndex(5);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 32) {
-          glm::vec3 const e1 = EdgeIndex(5, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(6, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(5);
+          glm::vec3 const e2 = cell.VoxelIndex(6);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 64) {
-          glm::vec3 const e1 = EdgeIndex(6, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(7, x, y, z);
+          glm::vec3 const e2 = cell.VoxelIndex(6);
+          glm::vec3 const e1 = cell.VoxelIndex(7);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 128) {
-          glm::vec3 const e1 = EdgeIndex(7, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(4, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(7);
+          glm::vec3 const e2 = cell.VoxelIndex(4);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 256) {
-          glm::vec3 const e1 = EdgeIndex(0, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(4, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(0);
+          glm::vec3 const e2 = cell.VoxelIndex(4);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 512) {
-          glm::vec3 const e1 = EdgeIndex(1, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(5, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(1);
+          glm::vec3 const e2 = cell.VoxelIndex(5);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 1024) {
-          glm::vec3 const e1 = EdgeIndex(2, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(6, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(2);
+          glm::vec3 const e2 = cell.VoxelIndex(6);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
         if (table::kEdgeTable[cube_index] & 2048) {
-          glm::vec3 const e1 = EdgeIndex(3, x, y, z);
-          glm::vec3 const e2 = EdgeIndex(7, x, y, z);
+          glm::vec3 const e1 = cell.VoxelIndex(3);
+          glm::vec3 const e2 = cell.VoxelIndex(7);
           vertices_.push_back(InterpolatedVertex(e1, e2));
           gradients_.push_back(InterpolatedNormal(e1, e2));
         }
@@ -270,28 +271,47 @@ Isosurface::ReadRawInfo(std::string_view const filepath)
   }
 }
 
-glm::vec3
-Isosurface::EdgeIndex(int index, int x, int y, int z) const
+Isosurface::GridCell::GridCell(int x, int y, int z)
+  : x_(x)
+  , y_(y)
+  , z_(z)
+{
+  voxel_index_.reserve(8);
+
+  voxel_index_.emplace_back(x_, y_, z_);
+  voxel_index_.emplace_back(x_ + 1, y_, z_);
+  voxel_index_.emplace_back(x_ + 1, y_, z_ + 1);
+  voxel_index_.emplace_back(x_, y_, z_ + 1);
+  voxel_index_.emplace_back(x_, y_ + 1, z_);
+  voxel_index_.emplace_back(x_ + 1, y_ + 1, z_);
+  voxel_index_.emplace_back(x_ + 1, y_ + 1, z_ + 1);
+  voxel_index_.emplace_back(x_, y_ + 1, z_ + 1);
+};
+
+Isosurface::GridCell::~GridCell(){};
+
+glm::vec3 const&
+Isosurface::GridCell::VoxelIndex(int index) const
 {
   switch (index) {
     case 0:
-      return glm::vec3{ x, y, z };
+      return voxel_index_[0];
     case 1:
-      return glm::vec3{ x + 1, y, z };
+      return voxel_index_[1];
     case 2:
-      return glm::vec3{ x + 1, y, z + 1 };
+      return voxel_index_[2];
     case 3:
-      return glm::vec3{ x, y, z + 1 };
+      return voxel_index_[3];
     case 4:
-      return glm::vec3{ x, y + 1, z };
+      return voxel_index_[4];
     case 5:
-      return glm::vec3{ x + 1, y + 1, z };
+      return voxel_index_[5];
     case 6:
-      return glm::vec3{ x + 1, y + 1, z + 1 };
+      return voxel_index_[6];
     case 7:
-      return glm::vec3{ x, y + 1, z + 1 };
+      return voxel_index_[7];
     default:
       fprintf(stderr, "Wrong edge index: %d\n", index);
-      return glm::vec3{ -1, -1, -1 };
+      exit(EXIT_FAILURE);
   }
 }
