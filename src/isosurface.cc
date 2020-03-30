@@ -83,77 +83,79 @@ Isosurface::MarchingCube()
         if (table::kEdgeTable[cube_index] == 0)
           continue;
 
+        std::array<glm::vec3, 12> vert_list;
+        std::array<glm::vec3, 12> grad_list;
         if (table::kEdgeTable[cube_index] & 1) {
           glm::vec3 const e1 = cell.VoxelIndex(0);
           glm::vec3 const e2 = cell.VoxelIndex(1);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[0] = InterpolatedVertex(e1, e2);
+          grad_list[0] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 2) {
           glm::vec3 const e1 = cell.VoxelIndex(1);
           glm::vec3 const e2 = cell.VoxelIndex(2);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[1] = InterpolatedVertex(e1, e2);
+          grad_list[1] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 4) {
           glm::vec3 const e1 = cell.VoxelIndex(2);
           glm::vec3 const e2 = cell.VoxelIndex(3);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[2] = InterpolatedVertex(e1, e2);
+          grad_list[2] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 8) {
           glm::vec3 const e1 = cell.VoxelIndex(3);
           glm::vec3 const e2 = cell.VoxelIndex(0);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[3] = InterpolatedVertex(e1, e2);
+          grad_list[3] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 16) {
           glm::vec3 const e1 = cell.VoxelIndex(4);
           glm::vec3 const e2 = cell.VoxelIndex(5);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[4] = InterpolatedVertex(e1, e2);
+          grad_list[4] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 32) {
           glm::vec3 const e1 = cell.VoxelIndex(5);
           glm::vec3 const e2 = cell.VoxelIndex(6);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[5] = InterpolatedVertex(e1, e2);
+          grad_list[5] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 64) {
           glm::vec3 const e2 = cell.VoxelIndex(6);
           glm::vec3 const e1 = cell.VoxelIndex(7);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[6] = InterpolatedVertex(e1, e2);
+          grad_list[6] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 128) {
           glm::vec3 const e1 = cell.VoxelIndex(7);
           glm::vec3 const e2 = cell.VoxelIndex(4);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[7] = InterpolatedVertex(e1, e2);
+          grad_list[y] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 256) {
           glm::vec3 const e1 = cell.VoxelIndex(0);
           glm::vec3 const e2 = cell.VoxelIndex(4);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[8] = InterpolatedVertex(e1, e2);
+          grad_list[8] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 512) {
           glm::vec3 const e1 = cell.VoxelIndex(1);
           glm::vec3 const e2 = cell.VoxelIndex(5);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[9] = InterpolatedVertex(e1, e2);
+          grad_list[9] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 1024) {
           glm::vec3 const e1 = cell.VoxelIndex(2);
           glm::vec3 const e2 = cell.VoxelIndex(6);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[10] = InterpolatedVertex(e1, e2);
+          grad_list[10] = InterpolatedNormal(e1, e2);
         }
         if (table::kEdgeTable[cube_index] & 2048) {
           glm::vec3 const e1 = cell.VoxelIndex(3);
           glm::vec3 const e2 = cell.VoxelIndex(7);
-          vertices_.push_back(InterpolatedVertex(e1, e2));
-          gradients_.push_back(InterpolatedNormal(e1, e2));
+          vert_list[11] = InterpolatedVertex(e1, e2);
+          grad_list[11] = InterpolatedNormal(e1, e2);
         }
       }
     }
