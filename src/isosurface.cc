@@ -2,7 +2,7 @@
 
 Isosurface::Isosurface()
   : h_(1.f)
-  , target_value_(90)
+  , target_value_(80)
   , vertex_count_(0)
 {}
 
@@ -58,9 +58,9 @@ Isosurface::MarchingCube()
 
   render_data_.reserve(xsize * ysize * zsize * 2);
 
-  for (int z = 0; z < zsize - 2; z += 2) {
-    for (int y = 0; y < ysize - 2; y += 2) {
-      for (int x = 0; x < xsize - 2; x += 2) {
+  for (int z = 0; z < zsize - 1; ++z) {
+    for (int y = 0; y < ysize - 1; ++y) {
+      for (int x = 0; x < xsize - 1; ++x) {
         unsigned short cube_index = 0;
         GridCell cell(x, y, z);
 

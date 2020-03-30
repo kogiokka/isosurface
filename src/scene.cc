@@ -82,10 +82,10 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   glNamedBufferSubData(vbo_, 0, 2 * count * sizeof(float), data);
 
   // Interleaved data
-  glVertexArrayVertexBuffer(vao, 0, vbo_, 0, stride);
-  glVertexArrayVertexBuffer(vao, 1, vbo_, stride, stride);
+  glVertexArrayVertexBuffer(vao, 0, vbo_, 0, stride * 2);
+  glVertexArrayVertexBuffer(vao, 1, vbo_, stride, stride * 2);
   glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
-  glVertexArrayAttribFormat(vao, 1, 3, GL_FLOAT, GL_FALSE, stride);
+  glVertexArrayAttribFormat(vao, 1, 3, GL_FLOAT, GL_FALSE, 0);
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);

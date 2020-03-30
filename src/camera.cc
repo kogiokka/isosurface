@@ -5,12 +5,12 @@ Camera::Camera()
   , target_{ 0.f, 0.f, 0.f }
   , theta_(0.3f)
   , phi_(1.4f)
-  , radius_(5.f)
+  , radius_(800.f)
   , aspect_ratio_(0.f)
   , view_volume_size_(200.f)
   , move_rate_(0.01f)
   , rotate_rate_(0.01f)
-  , zoom_(0.2f)
+  , zoom_(0.8f)
 {
   UpdateViewCoord();
 }
@@ -180,7 +180,7 @@ Camera::ViewProjectionMatrix() const
 
   float const v = view_volume_size_ * aspect_ratio_ * zoom_;
   float const h = view_volume_size_ * zoom_;
-  return glm::ortho(-v, v, -h, h, 0.f, 100.f) * view;
+  return glm::ortho(-v, v, -h, h, 0.f, 1000.f) * view;
 }
 
 glm::vec3 const&
