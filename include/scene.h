@@ -7,7 +7,7 @@
 #include "glad/glad.h"
 #include "camera.h"
 #include "shader.h"
-#include "static_data.h"
+#include "constants.h"
 
 class Scene
 {

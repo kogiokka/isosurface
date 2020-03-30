@@ -20,7 +20,7 @@ add_executable(${PROJECT_NAME}
   src/camera.cc
   src/scene.cc
   src/shader.cc
-  src/static_data.cc
+  src/constants.cc
   src/isosurface.cc
 )
 

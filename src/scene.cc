@@ -67,14 +67,14 @@ Scene::SetupOpenGL()
 {
   GLuint vao, vbo;
   unsigned int stride = 3 * sizeof(float);
-  unsigned int cube36_data_size = data::cube36.size() * sizeof(float);
+  unsigned int cube36_data_size = cube::cube36.size() * sizeof(float);
   vertex_count_ = 3 * 2 * 6 * 3;
 
   glCreateVertexArrays(1, &vao);
   glBindVertexArray(vao);
   glCreateBuffers(1, &vbo);
   glNamedBufferStorage(vbo, cube36_data_size, nullptr, GL_DYNAMIC_STORAGE_BIT);
-  glNamedBufferSubData(vbo, 0, cube36_data_size, data::cube36.data());
+  glNamedBufferSubData(vbo, 0, cube36_data_size, cube::cube36.data());
   glBindBuffer(GL_VERTEX_ARRAY, vbo);
   glVertexArrayVertexBuffer(vao, 0, vbo, 0, stride);
   glVertexArrayVertexBuffer(vao, 1, vbo, vertex_count_ * sizeof(float), stride);
