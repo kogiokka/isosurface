@@ -68,6 +68,19 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
 {
   assert(count != 0);
 
+  // for (int i = 0; i < 600; i += 6) {
+  //   fprintf(stderr,
+  //           "Position: %.3f, %.3f, %.3f / Normal: %.3f, %.3f, %.3f, length "
+  //           "of normal: %.3f\n",
+  //           data[i],
+  //           data[i + 1],
+  //           data[i + 2],
+  //           data[i + 3],
+  //           data[i + 4],
+  //           data[i + 5],
+  //           glm::length(glm::vec3{ data[i + 3], data[i + 4], data[i + 5] }));
+  // }
+
   vertex_count_ = count;
   GLuint vao;
   unsigned int stride = 3 * sizeof(float);
@@ -78,12 +91,14 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   glBindVertexArray(vao);
   glBindBuffer(GL_VERTEX_ARRAY, vbo_);
 
-  glNamedBufferStorage(vbo_, 2 * count * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
+  glNamedBufferStorage(
+    vbo_, 2 * count * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
   glNamedBufferSubData(vbo_, 0, 2 * count * sizeof(float), data);
 
   // Interleaved data
   glVertexArrayVertexBuffer(vao, 0, vbo_, 0, stride * 2);
   glVertexArrayVertexBuffer(vao, 1, vbo_, stride, stride * 2);
+  // glVertexArrayVertexBuffer(vao, 1, vbo_, 0, stride * 2);
   glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
   glVertexArrayAttribFormat(vao, 1, 3, GL_FLOAT, GL_FALSE, 0);
 
@@ -99,6 +114,7 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   camera_.SetAspectRatio(AspectRatio());
 
   glEnable(GL_DEPTH_TEST);
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void

@@ -14,7 +14,6 @@
 
 class Isosurface
 {
-  float const h_;
   unsigned int target_value_;
   unsigned int vertex_count_;
   std::array<int, 3> dimensions_;

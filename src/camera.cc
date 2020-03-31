@@ -154,7 +154,7 @@ void
 Camera::WheelZoom(int direction)
 {
   float const tmp_zoom = zoom_ + direction * 0.02;
-  constexpr float min = 0.1f;
+  constexpr float min = 0.001f;
   constexpr float max = 1.0f;
 
   if (tmp_zoom < min) {

@@ -17,7 +17,11 @@ void main()
   vec3 light_dir = normalize(light_src - attr_pos);
 
   float ambient_I = 0.1;
-  float diffusion_I = max(dot(norm, light_dir), 0);
+  float diffusion_I = dot(norm, light_dir);
+  if (diffusion_I < 0.0) {
+    diffusion_I = -diffusion_I;
+    norm = -norm;
+  }
   float specular_coef = 0.5;
 
   vec3 ambient = ambient_I * light_color;
