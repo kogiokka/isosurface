@@ -4,7 +4,9 @@ Isosurface::Isosurface()
   : h_(1.f)
   , target_value_(80)
   , vertex_count_(0)
-{}
+{
+  assert(vertex_count_ == 0);
+}
 
 Isosurface::~Isosurface() {}
 
@@ -288,14 +290,16 @@ Isosurface::GridCell::GridCell(int x, int y, int z)
   , y_(y)
   , z_(z)
 {
-  voxel_index_[0] = glm::vec3{ x_, y_, z_ };
-  voxel_index_[1] = glm::vec3{ x_ + 1, y_, z_ };
-  voxel_index_[2] = glm::vec3{ x_ + 1, y_, z_ + 1 };
-  voxel_index_[3] = glm::vec3{ x_, y_, z_ + 1 };
-  voxel_index_[4] = glm::vec3{ x_, y_ + 1, z_ };
-  voxel_index_[5] = glm::vec3{ x_ + 1, y_ + 1, z_ };
-  voxel_index_[6] = glm::vec3{ x_ + 1, y_ + 1, z_ + 1 };
-  voxel_index_[7] = glm::vec3{ x_, y_ + 1, z_ + 1 };
+  using namespace glm;
+
+  voxel_index_[0] = vec3{ x_, y_, z_ };
+  voxel_index_[1] = vec3{ x_ + 1, y_, z_ };
+  voxel_index_[2] = vec3{ x_ + 1, y_, z_ + 1 };
+  voxel_index_[3] = vec3{ x_, y_, z_ + 1 };
+  voxel_index_[4] = vec3{ x_, y_ + 1, z_ };
+  voxel_index_[5] = vec3{ x_ + 1, y_ + 1, z_ };
+  voxel_index_[6] = vec3{ x_ + 1, y_ + 1, z_ + 1 };
+  voxel_index_[7] = vec3{ x_, y_ + 1, z_ + 1 };
 };
 
 Isosurface::GridCell::~GridCell(){};

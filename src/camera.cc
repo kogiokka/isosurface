@@ -42,10 +42,7 @@ Camera::DragRotation(int x, int y)
 {
   constexpr float max_phi = 3.10f;
   constexpr float min_phi = 0.04f;
-  int const x_o = std::get<0>(rotation_origin_);
-  int const y_o = std::get<1>(rotation_origin_);
-  float const theta_o = std::get<2>(rotation_origin_);
-  float const phi_o = std::get<3>(rotation_origin_);
+  auto const [x_o, y_o, theta_o, phi_o] = rotation_origin_;
 
   theta_ = -(x - x_o) * rotate_rate_ + theta_o;
   float const tmp_phi = -(y - y_o) * rotate_rate_ + phi_o;
@@ -69,11 +66,9 @@ Camera::InitDragTranslation(int x, int y)
 void
 Camera::DragTranslation(int x, int y)
 {
-  float const x_o = static_cast<float>(std::get<0>(translation_origin_));
-  float const y_o = static_cast<float>(std::get<1>(translation_origin_));
-  glm::vec3 const target_o = std::get<2>(translation_origin_);
+  auto const [x_o, y_o, target_o] = translation_origin_;
 
-  target_ = (side_ * -(x - x_o) + up_ * (y - y_o)) * move_rate_ + target_o;
+  target_ = target_o + (-(x - x_o) * side_ + (y - y_o) * up_) * move_rate_;
 
   UpdateViewCoord();
 }

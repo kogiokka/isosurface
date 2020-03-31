@@ -23,7 +23,7 @@ class Camera
   float zoom_;
 
   std::tuple<int, int, float, float> rotation_origin_;
-  std::tuple<int, int, glm::vec3> translation_origin_;
+  std::tuple<float, float, glm::vec3> translation_origin_;
 
   Camera(Camera const&) = delete;
   Camera& operator=(Camera const&) = delete;
