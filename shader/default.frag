@@ -12,7 +12,6 @@ uniform vec3 object_color;
 
 void main()
 {
-
   vec3 norm = normalize(attr_normal);
   vec3 light_dir = normalize(light_src - attr_pos);
 

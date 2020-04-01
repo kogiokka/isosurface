@@ -68,19 +68,6 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
 {
   assert(count != 0);
 
-  // for (int i = 0; i < 600; i += 6) {
-  //   fprintf(stderr,
-  //           "Position: %.3f, %.3f, %.3f / Normal: %.3f, %.3f, %.3f, length "
-  //           "of normal: %.3f\n",
-  //           data[i],
-  //           data[i + 1],
-  //           data[i + 2],
-  //           data[i + 3],
-  //           data[i + 4],
-  //           data[i + 5],
-  //           glm::length(glm::vec3{ data[i + 3], data[i + 4], data[i + 5] }));
-  // }
-
   vertex_count_ = count;
   GLuint vao;
   unsigned int stride = 3 * sizeof(float);

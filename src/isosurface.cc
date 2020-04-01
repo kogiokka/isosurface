@@ -92,67 +92,38 @@ Isosurface::MarchingCube()
         if (table::kEdgeTable[cube_index] == 0)
           continue;
 
-        std::array<glm::vec3, 12> vert_list;
-        std::array<glm::vec3, 12> grad_list;
-        if (table::kEdgeTable[cube_index] & 1) {
-          vert_list[0] = InterpolatedVertex(cell[0], cell[1]);
-          grad_list[0] = InterpolatedNormal(cell[0], cell[1]);
-        }
-        if (table::kEdgeTable[cube_index] & 2) {
-          vert_list[1] = InterpolatedVertex(cell[1], cell[2]);
-          grad_list[1] = InterpolatedNormal(cell[1], cell[2]);
-        }
-        if (table::kEdgeTable[cube_index] & 4) {
-          vert_list[2] = InterpolatedVertex(cell[2], cell[3]);
-          grad_list[2] = InterpolatedNormal(cell[2], cell[3]);
-        }
-        if (table::kEdgeTable[cube_index] & 8) {
-          vert_list[3] = InterpolatedVertex(cell[3], cell[0]);
-          grad_list[3] = InterpolatedNormal(cell[3], cell[0]);
-        }
-        if (table::kEdgeTable[cube_index] & 16) {
-          vert_list[4] = InterpolatedVertex(cell[4], cell[5]);
-          grad_list[4] = InterpolatedNormal(cell[4], cell[5]);
-        }
-        if (table::kEdgeTable[cube_index] & 32) {
-          vert_list[5] = InterpolatedVertex(cell[5], cell[6]);
-          grad_list[5] = InterpolatedNormal(cell[5], cell[6]);
-        }
-        if (table::kEdgeTable[cube_index] & 64) {
-          vert_list[6] = InterpolatedVertex(cell[6], cell[7]);
-          grad_list[6] = InterpolatedNormal(cell[6], cell[7]);
-        }
-        if (table::kEdgeTable[cube_index] & 128) {
-          vert_list[7] = InterpolatedVertex(cell[7], cell[4]);
-          grad_list[7] = InterpolatedNormal(cell[7], cell[4]);
-        }
-        if (table::kEdgeTable[cube_index] & 256) {
-          vert_list[8] = InterpolatedVertex(cell[0], cell[4]);
-          grad_list[8] = InterpolatedNormal(cell[0], cell[4]);
-        }
-        if (table::kEdgeTable[cube_index] & 512) {
-          vert_list[9] = InterpolatedVertex(cell[1], cell[5]);
-          grad_list[9] = InterpolatedNormal(cell[1], cell[5]);
-        }
-        if (table::kEdgeTable[cube_index] & 1024) {
-          vert_list[10] = InterpolatedVertex(cell[2], cell[6]);
-          grad_list[10] = InterpolatedNormal(cell[2], cell[6]);
-        }
-        if (table::kEdgeTable[cube_index] & 2048) {
-          vert_list[11] = InterpolatedVertex(cell[3], cell[7]);
-          grad_list[11] = InterpolatedNormal(cell[3], cell[7]);
-        }
+        std::array<std::array<float, 6>, 12> vert_attribs;
+        if (table::kEdgeTable[cube_index] & 1)
+          vert_attribs[0] = InterpVertexAttribs(cell[0], cell[1]);
+        if (table::kEdgeTable[cube_index] & 2)
+          vert_attribs[1] = InterpVertexAttribs(cell[1], cell[2]);
+        if (table::kEdgeTable[cube_index] & 4)
+          vert_attribs[2] = InterpVertexAttribs(cell[2], cell[3]);
+        if (table::kEdgeTable[cube_index] & 8)
+          vert_attribs[3] = InterpVertexAttribs(cell[3], cell[0]);
+        if (table::kEdgeTable[cube_index] & 16)
+          vert_attribs[4] = InterpVertexAttribs(cell[4], cell[5]);
+        if (table::kEdgeTable[cube_index] & 32)
+          vert_attribs[5] = InterpVertexAttribs(cell[5], cell[6]);
+        if (table::kEdgeTable[cube_index] & 64)
+          vert_attribs[6] = InterpVertexAttribs(cell[6], cell[7]);
+        if (table::kEdgeTable[cube_index] & 128)
+          vert_attribs[7] = InterpVertexAttribs(cell[7], cell[4]);
+        if (table::kEdgeTable[cube_index] & 256)
+          vert_attribs[8] = InterpVertexAttribs(cell[0], cell[4]);
+        if (table::kEdgeTable[cube_index] & 512)
+          vert_attribs[9] = InterpVertexAttribs(cell[1], cell[5]);
+        if (table::kEdgeTable[cube_index] & 1024)
+          vert_attribs[10] = InterpVertexAttribs(cell[2], cell[6]);
+        if (table::kEdgeTable[cube_index] & 2048)
+          vert_attribs[11] = InterpVertexAttribs(cell[3], cell[7]);
 
         for (int i = 0; table::kTriTable[cube_index][i] != -1; ++i) {
           auto const& tri_list = table::kTriTable[cube_index];
-          glm::vec3 const& vert = vert_list[tri_list[i]];
-          glm::vec3 const& grad = glm::normalize(grad_list[tri_list[i]]);
-          render_data_.push_back(vert.x);
-          render_data_.push_back(vert.y);
-          render_data_.push_back(vert.z);
-          render_data_.push_back(grad.x);
-          render_data_.push_back(grad.y);
-          render_data_.push_back(grad.z);
+          std::array<float, 6> const& attrbs = vert_attribs[tri_list[i]];
+          for (auto const& a : attrbs) {
+            render_data_.push_back(a);
+          }
           vertex_count_ += 3;
         }
       }
@@ -160,49 +131,33 @@ Isosurface::MarchingCube()
   }
 }
 
-glm::vec3
-Isosurface::InterpolatedVertex(glm::vec3 const& v1, glm::vec3 const& v2)
+std::array<float, 6>
+Isosurface::InterpVertexAttribs(glm::vec3 const& v1, glm::vec3 const& v2)
 {
+  constexpr float min = 0.0001;
   float const value1 = Value(v1.x, v1.y, v1.z);
   float const value2 = Value(v2.x, v2.y, v2.z);
-
-  if (std::abs(value1 - value2) < 0.00001) {
-    return (v2 + v1) * 0.5f;
-  }
-  if (std::abs(target_value_ - value1) < 0.00001) {
-    return v1;
-  }
-  if (std::abs(target_value_ - value2) < 0.00001) {
-    return v2;
-  }
-
-  glm::vec3 v;
   float const ratio = (target_value_ - value1) / (value2 - value1);
-  v.x = (v2.x - v1.x) * ratio + v1.x;
-  v.y = (v2.y - v1.y) * ratio + v1.y;
-  v.z = (v2.z - v1.z) * ratio + v1.z;
-  return v;
-}
 
-glm::vec3
-Isosurface::InterpolatedNormal(glm::vec3 const& v1, glm::vec3 const& v2)
-{
-  float const value1 = Value(v1.x, v1.y, v1.z);
-  float const value2 = Value(v2.x, v2.y, v2.z);
   glm::vec3 const& g1 = Gradient(v1.x, v1.y, v1.z);
   glm::vec3 const& g2 = Gradient(v2.x, v2.y, v2.z);
 
-  if (std::abs(value1 - value2) < 0.00001) {
-    return (g1 + g2) * 0.5f;
+  if (std::abs(value1 - value2) < min) {
+    glm::vec3 const v = (v1 + v2) * 0.5f;
+    glm::vec3 const g = glm::normalize((g1 + g2) * 0.5f);
+    return std::array<float, 6>{ v.x, v.y, v.z, g.x, g.y, g.z };
   }
-  if (std::abs(target_value_ - value1) < 0.00001) {
-    return g1;
+  if (std::abs(target_value_ - value1) < min) {
+    return std::array<float, 6>{ v1.x, v1.y, v1.z, g1.x, g1.y, g1.z };
   }
-  if (std::abs(target_value_ - value2) < 0.00001) {
-    return g2;
+  if (std::abs(target_value_ - value2) < min) {
+    return std::array<float, 6>{ v2.x, v2.y, v2.z, g2.x, g2.y, g2.z };
   }
-  float const ratio = (target_value_ - value1) / (value2 - value1);
-  return ratio * (g2 - g1) + g1;
+
+  glm::vec3 const g = glm::normalize(ratio * (g2 - g1) + g1);
+  glm::vec3 const v = ratio * (v2 - v1) + v1;
+
+  return std::array<float, 6>{ v.x, v.y, v.z, g.x, g.y, g.z };
 }
 
 void

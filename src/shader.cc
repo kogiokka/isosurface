@@ -57,7 +57,7 @@ Shader::UniformLocation(std::string_view const uniform_name)
 
   int location = glGetUniformLocation(id_, name);
   if (location == -1) {
-    fprintf(stderr, "Uniform %s does not exist.", name);
+    fprintf(stderr, "Uniform %s does not exist.\n", name);
   }
   uniform_locations_[name] = location;
   return location;

@@ -183,3 +183,9 @@ Camera::Position() const
 {
   return position_;
 }
+
+glm::vec3 const&
+Camera::ForwardVector() const
+{
+  return forward_;
+}

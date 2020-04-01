@@ -45,10 +45,8 @@ public:
   unsigned int RenderVertexCount() const;
 
 private:
-  glm::vec3 InterpolatedVertex(glm::vec3 const& v1, glm::vec3 const& v2);
-  glm::vec3 InterpolatedNormal(glm::vec3 const& v1, glm::vec3 const& v2);
-
-private:
+  std::array<float, 6> InterpVertexAttribs(glm::vec3 const& v1,
+                                           glm::vec3 const& v2);
   inline float CenteredDifference(unsigned short front,
                                   unsigned short back) const;
   inline float ForwardDifference(unsigned short self,

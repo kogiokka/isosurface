@@ -61,4 +61,5 @@ public:
   void WheelZoom(int direction);
   glm::mat4 ViewProjectionMatrix() const;
   glm::vec3 const& Position() const;
+  glm::vec3 const& ForwardVector() const;
 };
