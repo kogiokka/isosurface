@@ -27,21 +27,21 @@ Isosurface::CalculateGradient()
         if (x == 0) {
           x_diff = ForwardDifference(Value(0, y, z), Value(1, y, z));
         } else if (x == xsize - 1) {
-          x_diff = BackwardDifference(Value(x - 1, y, z), Value(x, y, z));
+          x_diff = BackwardDifference(Value(x, y, z), Value(x - 1, y, z));
         } else {
           x_diff = CenteredDifference(Value(x - 1, y, z), Value(x + 1, y, z));
         }
         if (y == 0) {
           y_diff = ForwardDifference(Value(x, 0, z), Value(x, 1, z));
         } else if (y == ysize - 1) {
-          y_diff = BackwardDifference(Value(x, y - 1, z), Value(x, y, z));
+          y_diff = BackwardDifference(Value(x, y, z), Value(x, y - 1, z));
         } else {
           y_diff = CenteredDifference(Value(x, y - 1, z), Value(x, y + 1, z));
         }
         if (z == 0) {
           z_diff = ForwardDifference(Value(x, y, 0), Value(x, y, 1));
         } else if (z == zsize - 1) {
-          z_diff = BackwardDifference(Value(x, y, z - 1), Value(x, y, z));
+          z_diff = BackwardDifference(Value(x, y, z), Value(x, y, z - 1));
         } else {
           z_diff = CenteredDifference(Value(x, y, z - 1), Value(x, y, z + 1));
         }
@@ -55,27 +55,14 @@ Isosurface::CalculateGradient()
       }
     }
   }
-  // for (int z = 0; z < 10; ++z) {
-  //   for (int y = 0; y < 10; ++y) {
-  //     for (int x = 0; x < 10; ++x) {
-  //       glm::vec3 const tmp = gradients_.at(Index(x, y, z));
-  //       fprintf(stderr,
-  //               "VolumeData: %d, Gradient: %.3f, %.3f, %.3f\n",
-  //               Value(x, y, z),
-  //               tmp.x,
-  //               tmp.y,
-  //               tmp.z);
-  //     }
-  //   }
-  // }
 }
 
 void
 Isosurface::MarchingCube()
 {
-  int const xsize = dimensions_[0];
-  int const ysize = dimensions_[1];
-  int const zsize = dimensions_[2];
+  int const& xsize = dimensions_[0];
+  int const& ysize = dimensions_[1];
+  int const& zsize = dimensions_[2];
 
   render_data_.reserve(xsize * ysize * zsize * 2);
 
@@ -157,9 +144,9 @@ Isosurface::MarchingCube()
         }
 
         for (int i = 0; table::kTriTable[cube_index][i] != -1; ++i) {
-          glm::vec3 const vert = vert_list[table::kTriTable[cube_index][i]];
-          glm::vec3 const grad =
-            glm::normalize(grad_list[table::kTriTable[cube_index][i]]);
+          auto const& tri_list = table::kTriTable[cube_index];
+          glm::vec3 const& vert = vert_list[tri_list[i]];
+          glm::vec3 const& grad = glm::normalize(grad_list[tri_list[i]]);
           render_data_.push_back(vert.x);
           render_data_.push_back(vert.y);
           render_data_.push_back(vert.z);
@@ -182,12 +169,12 @@ Isosurface::InterpolatedVertex(glm::vec3 const& v1, glm::vec3 const& v2)
   if (std::abs(value1 - value2) < 0.00001) {
     return (v2 + v1) * 0.5f;
   }
-  // if (std::abs(target_value_ - value1) < 0.00001) {
-  //   return v1;
-  // }
-  // if (std::abs(target_value_ - value2) < 0.00001) {
-  //   return v2;
-  // }
+  if (std::abs(target_value_ - value1) < 0.00001) {
+    return v1;
+  }
+  if (std::abs(target_value_ - value2) < 0.00001) {
+    return v2;
+  }
 
   glm::vec3 v;
   float const ratio = (target_value_ - value1) / (value2 - value1);
@@ -208,14 +195,14 @@ Isosurface::InterpolatedNormal(glm::vec3 const& v1, glm::vec3 const& v2)
   if (std::abs(value1 - value2) < 0.00001) {
     return (g1 + g2) * 0.5f;
   }
-  // if (std::abs(target_value_ - value1) < 0.00001) {
-  //   return g1;
-  // }
-  // if (std::abs(target_value_ - value2) < 0.00001) {
-  //   return g2;
-  // }
+  if (std::abs(target_value_ - value1) < 0.00001) {
+    return g1;
+  }
+  if (std::abs(target_value_ - value2) < 0.00001) {
+    return g2;
+  }
   float const ratio = (target_value_ - value1) / (value2 - value1);
-  return ratio * (g2 - g1) - g1;
+  return ratio * (g2 - g1) + g1;
 }
 
 void
