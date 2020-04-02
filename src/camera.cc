@@ -9,8 +9,9 @@ Camera::Camera()
   , aspect_ratio_(0.f)
   , view_volume_size_(200.f)
   , move_rate_(0.8f)
-  , rotate_rate_(0.01f)
+  , rotate_rate_(0.005f)
   , zoom_(0.8f)
+  , horiz_rotate_dir(1)
 {
   UpdateViewCoord();
 }
@@ -47,6 +48,14 @@ Camera::UpdateViewCoord()
 void
 Camera::InitDragRotation(int x, int y)
 {
+  constexpr float half = 3.1415926f;
+
+  // Phi has been set between 0 and 360 degrees
+  if (phi_ > half)
+    horiz_rotate_dir = -1;
+  else
+    horiz_rotate_dir = 1;
+
   rotation_origin_ = std::make_tuple(x, y, theta_, phi_);
 }
 
@@ -54,13 +63,20 @@ void
 Camera::DragRotation(int x, int y)
 {
   auto const [x_o, y_o, theta_o, phi_o] = rotation_origin_;
+  constexpr float full = 6.2831853f;
 
-  theta_ = (x - x_o) * rotate_rate_ + theta_o;
+  theta_ = horiz_rotate_dir * (x - x_o) * rotate_rate_ + theta_o;
   phi_ = -(y - y_o) * rotate_rate_ + phi_o;
-  if (theta_ > 6.28f)
-    theta_ -= 6.28f;
-  if (phi_ > 6.28f)
-    phi_ -= 6.28f;
+
+  // Restrict both theta and phi to being between 0 and 360 degrees.
+  if (theta_ < 0.f)
+    theta_ += full;
+  else if (theta_ > full)
+    theta_ -= full;
+  if (phi_ < 0.f)
+    phi_ += full;
+  else if (phi_ > full)
+    phi_ -= full;
 
   UpdateViewCoord();
 }

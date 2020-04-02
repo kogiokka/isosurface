@@ -21,6 +21,7 @@ class Camera
   float move_rate_;
   float rotate_rate_;
   float zoom_;
+  int horiz_rotate_dir;
 
   std::tuple<int, int, float, float> rotation_origin_;
   std::tuple<float, float, glm::vec3> translation_origin_;
