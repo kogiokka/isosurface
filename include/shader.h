@@ -1,9 +1,9 @@
 #pragma once
 
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
-#include <fstream>
 #include <unordered_map>
 
 #include "glad/glad.h"
@@ -14,16 +14,18 @@ class Shader
 {
   GLuint id_;
   std::unordered_map<std::string, GLint> uniform_locations_;
-  Shader(Shader const&) = delete;
-  Shader& operator=(Shader const&) = delete;
 
 public:
   Shader();
   ~Shader();
-  GLuint Id() const;
+  Shader(Shader const&) = delete;
+  Shader& operator=(Shader const&) = delete;
+  Shader(Shader&&) = default;
+
+  unsigned int Id() const;
   bool Attach(GLenum shader_type, std::string_view const filepath);
   void Use() const;
-  void Link() const;
+  bool Link() const;
   int UniformLocation(std::string_view const uniform_name);
   void SetMatrix4(std::string_view const name, glm::mat4 const& mat);
   void SetVector3(std::string_view const name, glm::vec3 const& vec);

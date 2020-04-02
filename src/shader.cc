@@ -12,10 +12,10 @@ Shader::~Shader()
   glDeleteProgram(id_);
 }
 
-GLuint
+unsigned int
 Shader::Id() const
 {
-  return id_;
+  return static_cast<unsigned int>(id_);
 }
 
 bool
@@ -87,10 +87,26 @@ Shader::Use() const
   glUseProgram(id_);
 }
 
-void
+bool
 Shader::Link() const
 {
   glLinkProgram(id_);
+
+  GLint success;
+  glGetProgramiv(id_, GL_LINK_STATUS, &success);
+
+  if (success == GL_TRUE)
+    return true;
+
+  GLint log_length;
+  std::string log;
+  glGetProgramiv(id_, GL_INFO_LOG_LENGTH, &log_length);
+  log.resize(log_length);
+  glGetProgramInfoLog(id_, log_length, nullptr, log.data());
+  glDeleteProgram(id_);
+
+  fprintf(stderr, "%s\n", log.data());
+  return false;
 }
 
 bool
@@ -110,9 +126,7 @@ Shader::IsCompiled(GLuint const shader_object)
   glGetShaderInfoLog(shader_object, log_length, nullptr, log.data());
   glDeleteShader(shader_object);
 
-  fprintf(stderr, "%s", log.data());
+  fprintf(stderr, "%s\n", log.data());
 
   return false;
 }
-
-

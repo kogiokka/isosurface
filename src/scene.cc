@@ -3,59 +3,44 @@
 Scene::Scene()
   : width_(800)
   , height_(600)
+  , shader_id_(0)
   , quit_(false)
-  , window_(nullptr, SDL_DestroyWindow)
-  , shader_(nullptr){};
+  , window_(nullptr, SDL_DestroyWindow){};
+
+void
+Scene::DefaultShaderRoutine()
+{
+  auto& s = shaders_[shader_id_].first;
+  s->SetVector3("light_color", 1.f, 1.f, 1.f);
+  s->SetVector3("object_color", 0.f, 0.5f, 1.f);
+  s->SetMatrix4("view_proj_matrix", camera_.ViewProjectionMatrix());
+  s->SetVector3("light_src", camera_.Position());
+  s->SetVector3("view_pos", camera_.Position());
+}
+
+void
+Scene::CrossSectionShaderRoutine()
+{
+  auto& s = shaders_[shader_id_].first;
+  s->SetVector3("light_color", 1.f, 1.f, 1.f);
+  s->SetVector3("object_color", 0.f, 0.5f, 1.f);
+  s->SetVector3("cross_section.point", 30.0f, 60.0f, 50.0f);
+  s->SetMatrix4("view_proj_matrix", camera_.ViewProjectionMatrix());
+  s->SetVector3("light_src", camera_.Position());
+  s->SetVector3("view_pos", camera_.Position());
+  s->SetVector3("cross_section.normal", camera_.ForwardVector());
+}
 
 void
 Scene::Render()
 {
-  shader_->SetVector3("light_color", 1.f, 1.f, 1.f);
-  shader_->SetVector3("object_color", 0.f, 0.5f, 1.f);
-
   while (!quit_) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-      switch (event.type) {
-        case SDL_MOUSEMOTION:
-          MouseMotionControl(event.motion);
-          break;
-        case SDL_MOUSEBUTTONDOWN:
-          MouseButtonControl(event.type, event.button);
-          break;
-        case SDL_MOUSEBUTTONUP:
-          MouseButtonControl(event.type, event.button);
-          break;
-        case SDL_KEYDOWN:
-          KeyboardControl(event.type, event.key);
-          break;
-        case SDL_KEYUP:
-          KeyboardControl(event.type, event.key);
-          break;
-        case SDL_MOUSEWHEEL:
-          MouseWheelControl(event.wheel);
-          break;
-        case SDL_WINDOWEVENT:
-          switch (event.window.event) {
-            case SDL_WINDOWEVENT_RESIZED:
-              SDL_GetWindowSize(window_.get(), &width_, &height_);
-              camera_.SetAspectRatio(width_, height_);
-              break;
-          }
-          break;
-        case SDL_QUIT:
-          quit_ = true;
-          break;
-      }
-    }
-
+    EventHandler();
     glViewport(0, 0, width_, height_);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shader_->SetMatrix4("view_proj_matrix", camera_.ViewProjectionMatrix());
-    shader_->SetVector3("light_src", camera_.Position());
-    shader_->SetVector3("view_pos", camera_.Position());
+    shaders_[shader_id_].second();
 
     glDrawArrays(GL_TRIANGLES, 0, vertex_count_);
 
@@ -92,12 +77,18 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
 
-  shader_.reset(new Shader());
-  shader_->Attach(GL_VERTEX_SHADER, "shader/default.vert");
-  shader_->Attach(GL_FRAGMENT_SHADER, "shader/default.frag");
-  shader_->Link();
-  shader_->Use();
+  shaders_.push_back(std::make_pair(std::make_unique<Shader>(), std::bind(&Scene::DefaultShaderRoutine, this)));
+  shaders_.push_back(std::make_pair(std::make_unique<Shader>(), std::bind(&Scene::CrossSectionShaderRoutine, this)));
+  shaders_[0].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
+  shaders_[0].first->Attach(GL_FRAGMENT_SHADER, "shader/default.frag");
+  shaders_[1].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
+  shaders_[1].first->Attach(GL_FRAGMENT_SHADER, "shader/cross_section.frag");
 
+
+  for (auto const& s : shaders_)
+    s.first->Link();
+
+  shaders_[shader_id_].first->Use();
   camera_.SetAspectRatio(AspectRatio());
 
   glEnable(GL_DEPTH_TEST);
@@ -222,6 +213,45 @@ Scene::Init()
   SDL_GL_MakeCurrent(window_.get(), context_);
   gladLoadGLLoader(SDL_GL_GetProcAddress);
   SDL_GL_SetSwapInterval(1);
+}
+
+void
+Scene::EventHandler()
+{
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    switch (event.type) {
+      case SDL_MOUSEMOTION:
+        MouseMotionControl(event.motion);
+        break;
+      case SDL_MOUSEBUTTONDOWN:
+        MouseButtonControl(event.type, event.button);
+        break;
+      case SDL_MOUSEBUTTONUP:
+        MouseButtonControl(event.type, event.button);
+        break;
+      case SDL_KEYDOWN:
+        KeyboardControl(event.type, event.key);
+        break;
+      case SDL_KEYUP:
+        KeyboardControl(event.type, event.key);
+        break;
+      case SDL_MOUSEWHEEL:
+        MouseWheelControl(event.wheel);
+        break;
+      case SDL_WINDOWEVENT:
+        switch (event.window.event) {
+          case SDL_WINDOWEVENT_RESIZED:
+            SDL_GetWindowSize(window_.get(), &width_, &height_);
+            camera_.SetAspectRatio(width_, height_);
+            break;
+        }
+        break;
+      case SDL_QUIT:
+        quit_ = true;
+        break;
+    }
+  }
 }
 
 Scene::~Scene()

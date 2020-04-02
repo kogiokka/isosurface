@@ -18,9 +18,21 @@ struct CrossSection
 
 uniform CrossSection cross_section;
 
+bool IsCutOff()
+{
+  float test_result = dot(normalize(cross_section.point - attr_pos), cross_section.normal);
+
+  if (test_result < 0.0)
+    return false;
+  else
+    return true;
+}
 
 void main()
 {
+  if (IsCutOff()) {
+    discard;
+  }
   vec3 norm = normalize(attr_normal);
   vec3 light_dir = normalize(light_src - attr_pos);
 
