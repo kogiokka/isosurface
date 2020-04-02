@@ -77,13 +77,17 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
 
-  shaders_.push_back(std::make_pair(std::make_unique<Shader>(), std::bind(&Scene::DefaultShaderRoutine, this)));
-  shaders_.push_back(std::make_pair(std::make_unique<Shader>(), std::bind(&Scene::CrossSectionShaderRoutine, this)));
+  auto const default_routine = std::bind(&Scene::DefaultShaderRoutine, this);
+  auto const cross_section_routine =
+    std::bind(&Scene::CrossSectionShaderRoutine, this);
+  shaders_.push_back(
+    std::make_pair(std::make_unique<Shader>(), default_routine));
+  shaders_.push_back(
+    std::make_pair(std::make_unique<Shader>(), cross_section_routine));
   shaders_[0].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
   shaders_[0].first->Attach(GL_FRAGMENT_SHADER, "shader/default.frag");
   shaders_[1].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
   shaders_[1].first->Attach(GL_FRAGMENT_SHADER, "shader/cross_section.frag");
-
 
   for (auto const& s : shaders_)
     s.first->Link();

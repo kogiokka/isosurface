@@ -62,4 +62,7 @@ public:
   glm::mat4 ViewProjectionMatrix() const;
   glm::vec3 const& Position() const;
   glm::vec3 const& ForwardVector() const;
+
+private:
+  glm::vec3 CartesianCoord(float theta, float phi) const;
 };

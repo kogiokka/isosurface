@@ -2,13 +2,13 @@
 
 Camera::Camera()
   : world_up_{ 0.f, 1.f, 0.f }
-  , target_{ 0.f, 0.f, 0.f }
+  , target_{ 70.f, 100.f, 50.f }
   , theta_(0.3f)
   , phi_(1.4f)
   , radius_(600.f)
   , aspect_ratio_(0.f)
   , view_volume_size_(200.f)
-  , move_rate_(0.1f)
+  , move_rate_(0.8f)
   , rotate_rate_(0.01f)
   , zoom_(0.8f)
 {
@@ -17,15 +17,28 @@ Camera::Camera()
 
 Camera::~Camera() {}
 
+glm::vec3
+Camera::CartesianCoord(float theta, float phi) const
+{
+  using namespace std;
+
+  float const sin_p = sinf(phi);
+  float const cos_p = cosf(phi);
+  float const sin_t = sinf(theta);
+  float const cos_t = cosf(theta);
+
+  return glm::vec3{ sin_p * cos_t, cos_p, sin_p * sin_t };
+}
+
 void
 Camera::UpdateViewCoord()
 {
   using namespace glm;
 
-  float x = sin(phi_) * sin(theta_);
-  float y = cos(phi_);
-  float z = sin(phi_) * cos(theta_);
-  position_ = radius_ * vec3{ x, y, z } + target_;
+  constexpr float degree_45 = 0.785f;
+  world_up_ = normalize(-radius_ * CartesianCoord(theta_, phi_ + degree_45));
+
+  position_ = radius_ * CartesianCoord(theta_, phi_) + target_;
   forward_ = normalize(target_ - position_);
   side_ = normalize(cross(forward_, world_up_));
   up_ = cross(side_, forward_);
@@ -40,19 +53,14 @@ Camera::InitDragRotation(int x, int y)
 void
 Camera::DragRotation(int x, int y)
 {
-  constexpr float max_phi = 3.10f;
-  constexpr float min_phi = 0.04f;
   auto const [x_o, y_o, theta_o, phi_o] = rotation_origin_;
 
-  theta_ = -(x - x_o) * rotate_rate_ + theta_o;
-  float const tmp_phi = -(y - y_o) * rotate_rate_ + phi_o;
-  if (tmp_phi >= max_phi) {
-    phi_ = max_phi;
-  } else if (tmp_phi <= min_phi) {
-    phi_ = min_phi;
-  } else {
-    phi_ = tmp_phi;
-  }
+  theta_ = (x - x_o) * rotate_rate_ + theta_o;
+  phi_ = -(y - y_o) * rotate_rate_ + phi_o;
+  if (theta_ > 6.28f)
+    theta_ -= 6.28f;
+  if (phi_ > 6.28f)
+    phi_ -= 6.28f;
 
   UpdateViewCoord();
 }
@@ -68,58 +76,8 @@ Camera::DragTranslation(int x, int y)
 {
   auto const [x_o, y_o, target_o] = translation_origin_;
 
-  target_ = target_o + (-(x - x_o) * side_ + (y - y_o) * up_) * move_rate_;
-
-  UpdateViewCoord();
-}
-
-void
-Camera::Moving(Camera::Translate direction)
-{
-  switch (direction) {
-    case Translate::kUp:
-      target_ += -up_;
-      break;
-    case Translate::kDown:
-      target_ += up_;
-      break;
-    case Translate::kRight:
-      target_ += side_;
-      break;
-    case Translate::kLeft:
-      target_ += -side_;
-      break;
-    case Translate::kForward:
-      target_ += forward_;
-      break;
-    case Translate::kBackward:
-      target_ += -forward_;
-      break;
-  }
-
-  UpdateViewCoord();
-}
-
-void
-Camera::Turning(Camera::Rotate direction)
-{
-  constexpr float max_phi = 3.10f;
-  constexpr float min_phi = 0.04f;
-
-  switch (direction) {
-    case Rotate::kThetaCW:
-      theta_ += 0.1f;
-      break;
-    case Rotate::kThetaCCW:
-      theta_ -= 0.1f;
-      break;
-    case Rotate::kPhiUp:
-      phi_ = std::max(min_phi, phi_ - 0.1f);
-      break;
-    case Rotate::kPhiDown:
-      phi_ = std::min(max_phi, phi_ + 0.1f);
-      break;
-  }
+  target_ =
+    target_o + (-(x - x_o) * side_ + (y - y_o) * up_) * move_rate_ * zoom_;
 
   UpdateViewCoord();
 }
@@ -154,7 +112,7 @@ void
 Camera::WheelZoom(int direction)
 {
   float const tmp_zoom = zoom_ + direction * 0.02;
-  constexpr float min = 0.001f;
+  constexpr float min = 0.01f;
   constexpr float max = 1.0f;
 
   if (tmp_zoom < min) {
@@ -188,4 +146,56 @@ glm::vec3 const&
 Camera::ForwardVector() const
 {
   return forward_;
+}
+
+void
+Camera::Moving(Camera::Translate direction)
+{
+  float const speed = 10.f * move_rate_ * zoom_;
+  switch (direction) {
+    case Translate::kUp:
+      target_ += -up_ * speed;
+      break;
+    case Translate::kDown:
+      target_ += up_ * speed;
+      break;
+    case Translate::kRight:
+      target_ += -side_ * speed;
+      break;
+    case Translate::kLeft:
+      target_ += side_ * speed;
+      break;
+    case Translate::kForward:
+      target_ += forward_ * speed;
+      break;
+    case Translate::kBackward:
+      target_ += -forward_ * speed;
+      break;
+  }
+
+  UpdateViewCoord();
+}
+
+void
+Camera::Turning(Camera::Rotate direction)
+{
+  constexpr float max_phi = 3.10f;
+  constexpr float min_phi = 0.04f;
+
+  switch (direction) {
+    case Rotate::kThetaCW:
+      theta_ += 0.1f;
+      break;
+    case Rotate::kThetaCCW:
+      theta_ -= 0.1f;
+      break;
+    case Rotate::kPhiUp:
+      phi_ = std::max(min_phi, phi_ - 0.1f);
+      break;
+    case Rotate::kPhiDown:
+      phi_ = std::min(max_phi, phi_ + 0.1f);
+      break;
+  }
+
+  UpdateViewCoord();
 }
