@@ -42,14 +42,10 @@ public:
   void ReadRaw(std::string_view const filepath);
 
 private:
-  std::array<float, 6> InterpVertexAttribs(glm::vec3 const& v1,
-                                           glm::vec3 const& v2);
-  inline float CenteredDifference(unsigned short front,
-                                  unsigned short back) const;
-  inline float ForwardDifference(unsigned short self,
-                                 unsigned short front) const;
-  inline float BackwardDifference(unsigned short self,
-                                  unsigned short back) const;
+  std::array<float, 6> InterpVertexAttribs(glm::vec3 const& v1, glm::vec3 const& v2);
+  inline float CenteredDifference(unsigned short front, unsigned short back) const;
+  inline float ForwardDifference(unsigned short self, unsigned short front) const;
+  inline float BackwardDifference(unsigned short self, unsigned short back) const;
   inline unsigned short Value(int x, int y, int z) const;
   inline unsigned short Value(glm::vec3 const& v) const;
   inline glm::vec3 const& Gradient(int x, int y, int z) const;

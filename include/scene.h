@@ -2,8 +2,8 @@
 
 #include <functional>
 #include <memory>
-#include <vector>
 #include <tuple>
+#include <vector>
 
 #include "SDL2/SDL.h"
 #include "camera.h"

@@ -68,8 +68,7 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   glBindVertexArray(vao);
   glBindBuffer(GL_VERTEX_ARRAY, vbo_);
 
-  glNamedBufferStorage(
-    vbo_, 2 * count * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
+  glNamedBufferStorage(vbo_, 2 * count * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
   glNamedBufferSubData(vbo_, 0, 2 * count * sizeof(float), data);
 
   // Interleaved data
@@ -83,12 +82,9 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   glEnableVertexAttribArray(1);
 
   auto const default_routine = std::bind(&Scene::DefaultShaderRoutine, this);
-  auto const cross_section_routine =
-    std::bind(&Scene::CrossSectionShaderRoutine, this);
-  shaders_.push_back(
-    std::make_pair(std::make_unique<Shader>(), default_routine));
-  shaders_.push_back(
-    std::make_pair(std::make_unique<Shader>(), cross_section_routine));
+  auto const cross_section_routine = std::bind(&Scene::CrossSectionShaderRoutine, this);
+  shaders_.push_back(std::make_pair(std::make_unique<Shader>(), default_routine));
+  shaders_.push_back(std::make_pair(std::make_unique<Shader>(), cross_section_routine));
   shaders_[0].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
   shaders_[0].first->Attach(GL_FRAGMENT_SHADER, "shader/default.frag");
   shaders_[1].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
@@ -108,48 +104,48 @@ void
 Scene::KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key)
 {
   switch (type) {
-    case SDL_KEYDOWN:
-      switch (key.keysym.sym) {
-        case SDLK_w:
-          camera_->Moving(Camera::Translate::kUp);
-          break;
-        case SDLK_s:
-          camera_->Moving(Camera::Translate::kDown);
-          break;
-        case SDLK_a:
-          camera_->Moving(Camera::Translate::kLeft);
-          break;
-        case SDLK_d:
-          camera_->Moving(Camera::Translate::kRight);
-          break;
-        case SDLK_RIGHT:
-          camera_->Turning(Camera::Rotate::kClockwise);
-          break;
-        case SDLK_LEFT:
-          camera_->Turning(Camera::Rotate::kCounterClockwise);
-          break;
-        case SDLK_UP:
-          camera_->Turning(Camera::Rotate::kPitchDown);
-          break;
-        case SDLK_DOWN:
-          camera_->Turning(Camera::Rotate::kPitchUp);
-          break;
-        case SDLK_r:
-          camera_.reset(new Camera());
-          camera_->SetAspectRatio(AspectRatio());
-          break;
-        case SDLK_q:
-          if (key.keysym.mod & KMOD_CTRL)
-            quit_ = true;
-          break;
-      }
+  case SDL_KEYDOWN:
+    switch (key.keysym.sym) {
+    case SDLK_w:
+      camera_->Moving(Camera::Translate::kUp);
       break;
-    case SDL_KEYUP:
-      switch (key.keysym.sym) {
-        case SDLK_ESCAPE:
-          break;
-      }
+    case SDLK_s:
+      camera_->Moving(Camera::Translate::kDown);
       break;
+    case SDLK_a:
+      camera_->Moving(Camera::Translate::kLeft);
+      break;
+    case SDLK_d:
+      camera_->Moving(Camera::Translate::kRight);
+      break;
+    case SDLK_RIGHT:
+      camera_->Turning(Camera::Rotate::kClockwise);
+      break;
+    case SDLK_LEFT:
+      camera_->Turning(Camera::Rotate::kCounterClockwise);
+      break;
+    case SDLK_UP:
+      camera_->Turning(Camera::Rotate::kPitchDown);
+      break;
+    case SDLK_DOWN:
+      camera_->Turning(Camera::Rotate::kPitchUp);
+      break;
+    case SDLK_r:
+      camera_.reset(new Camera());
+      camera_->SetAspectRatio(AspectRatio());
+      break;
+    case SDLK_q:
+      if (key.keysym.mod & KMOD_CTRL)
+        quit_ = true;
+      break;
+    }
+    break;
+  case SDL_KEYUP:
+    switch (key.keysym.sym) {
+    case SDLK_ESCAPE:
+      break;
+    }
+    break;
   }
 }
 
@@ -157,24 +153,24 @@ void
 Scene::MouseButtonControl(Uint32 type, const SDL_MouseButtonEvent& button)
 {
   switch (type) {
-    case SDL_MOUSEBUTTONDOWN:
-      switch (button.button) {
-        case SDL_BUTTON_LEFT:
-          camera_->InitDragTranslation(button.x, button.y);
-          break;
-        case SDL_BUTTON_RIGHT:
-          camera_->InitDragRotation(button.x, button.y);
-          break;
-      }
+  case SDL_MOUSEBUTTONDOWN:
+    switch (button.button) {
+    case SDL_BUTTON_LEFT:
+      camera_->InitDragTranslation(button.x, button.y);
       break;
-    case SDL_MOUSEBUTTONUP:
-      switch (button.button) {
-        case SDL_BUTTON_LEFT:
-          break;
-        case SDL_BUTTON_RIGHT:
-          break;
-      }
+    case SDL_BUTTON_RIGHT:
+      camera_->InitDragRotation(button.x, button.y);
       break;
+    }
+    break;
+  case SDL_MOUSEBUTTONUP:
+    switch (button.button) {
+    case SDL_BUTTON_LEFT:
+      break;
+    case SDL_BUTTON_RIGHT:
+      break;
+    }
+    break;
   }
 }
 
@@ -188,12 +184,12 @@ void
 Scene::MouseMotionControl(SDL_MouseMotionEvent const& motion)
 {
   switch (motion.state) {
-    case SDL_BUTTON_LMASK:
-      camera_->DragTranslation(motion.x, motion.y);
-      break;
-    case SDL_BUTTON_RMASK:
-      camera_->DragRotation(motion.x, motion.y);
-      break;
+  case SDL_BUTTON_LMASK:
+    camera_->DragTranslation(motion.x, motion.y);
+    break;
+  case SDL_BUTTON_RMASK:
+    camera_->DragRotation(motion.x, motion.y);
+    break;
   }
 }
 
@@ -216,14 +212,9 @@ Scene::Init()
   SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-  Uint32 window_flags =
-    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-  window_.reset(SDL_CreateWindow("Isosurface",
-                                 SDL_WINDOWPOS_CENTERED,
-                                 SDL_WINDOWPOS_CENTERED,
-                                 width_,
-                                 height_,
-                                 window_flags));
+  Uint32 window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+  window_.reset(
+    SDL_CreateWindow("Isosurface", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width_, height_, window_flags));
   SDL_SetWindowMinimumSize(window_.get(), 400, 300);
 
   context_ = SDL_GL_CreateContext(window_.get());
@@ -238,35 +229,35 @@ Scene::EventHandler()
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
-      case SDL_MOUSEMOTION:
-        MouseMotionControl(event.motion);
+    case SDL_MOUSEMOTION:
+      MouseMotionControl(event.motion);
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      MouseButtonControl(event.type, event.button);
+      break;
+    case SDL_MOUSEBUTTONUP:
+      MouseButtonControl(event.type, event.button);
+      break;
+    case SDL_KEYDOWN:
+      KeyboardControl(event.type, event.key);
+      break;
+    case SDL_KEYUP:
+      KeyboardControl(event.type, event.key);
+      break;
+    case SDL_MOUSEWHEEL:
+      MouseWheelControl(event.wheel);
+      break;
+    case SDL_WINDOWEVENT:
+      switch (event.window.event) {
+      case SDL_WINDOWEVENT_RESIZED:
+        SDL_GetWindowSize(window_.get(), &width_, &height_);
+        camera_->SetAspectRatio(width_, height_);
         break;
-      case SDL_MOUSEBUTTONDOWN:
-        MouseButtonControl(event.type, event.button);
-        break;
-      case SDL_MOUSEBUTTONUP:
-        MouseButtonControl(event.type, event.button);
-        break;
-      case SDL_KEYDOWN:
-        KeyboardControl(event.type, event.key);
-        break;
-      case SDL_KEYUP:
-        KeyboardControl(event.type, event.key);
-        break;
-      case SDL_MOUSEWHEEL:
-        MouseWheelControl(event.wheel);
-        break;
-      case SDL_WINDOWEVENT:
-        switch (event.window.event) {
-          case SDL_WINDOWEVENT_RESIZED:
-            SDL_GetWindowSize(window_.get(), &width_, &height_);
-            camera_->SetAspectRatio(width_, height_);
-            break;
-        }
-        break;
-      case SDL_QUIT:
-        quit_ = true;
-        break;
+      }
+      break;
+    case SDL_QUIT:
+      quit_ = true;
+      break;
     }
   }
 }

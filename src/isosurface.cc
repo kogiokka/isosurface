@@ -2,7 +2,8 @@
 
 Isosurface::Isosurface(float isovalue)
   : isovalue_(isovalue)
-{}
+{
+}
 
 Isosurface::~Isosurface() {}
 
@@ -46,8 +47,7 @@ Isosurface::CalculateGradient()
         if (x_diff == 0 && y_diff == 0 && z_diff == 0) {
           gradients_.emplace_back(0.f, 0.f, 0.f);
         } else {
-          gradients_.push_back(
-            glm::normalize(glm::vec3{ x_diff, y_diff, z_diff }));
+          gradients_.push_back(glm::normalize(glm::vec3{ x_diff, y_diff, z_diff }));
         }
       }
     }
@@ -177,8 +177,7 @@ Isosurface::ReadRaw(const std::string_view filepath)
   file.read(tmp.data(), file_size);
   file.close();
 
-  scalar_field_.assign(std::make_move_iterator(begin(tmp)),
-                       std::make_move_iterator(end(tmp)));
+  scalar_field_.assign(std::make_move_iterator(begin(tmp)), std::make_move_iterator(end(tmp)));
 }
 
 std::array<float, 6>
@@ -276,24 +275,24 @@ Isosurface::GridCell::~GridCell(){};
 glm::vec3 const& Isosurface::GridCell::operator[](int index) const
 {
   switch (index) {
-    case 0:
-      return voxel_index_[0];
-    case 1:
-      return voxel_index_[1];
-    case 2:
-      return voxel_index_[2];
-    case 3:
-      return voxel_index_[3];
-    case 4:
-      return voxel_index_[4];
-    case 5:
-      return voxel_index_[5];
-    case 6:
-      return voxel_index_[6];
-    case 7:
-      return voxel_index_[7];
-    default:
-      fprintf(stderr, "Wrong gridcell index: %d\n", index);
-      exit(EXIT_FAILURE);
+  case 0:
+    return voxel_index_[0];
+  case 1:
+    return voxel_index_[1];
+  case 2:
+    return voxel_index_[2];
+  case 3:
+    return voxel_index_[3];
+  case 4:
+    return voxel_index_[4];
+  case 5:
+    return voxel_index_[5];
+  case 6:
+    return voxel_index_[6];
+  case 7:
+    return voxel_index_[7];
+  default:
+    fprintf(stderr, "Wrong gridcell index: %d\n", index);
+    exit(EXIT_FAILURE);
   }
 }

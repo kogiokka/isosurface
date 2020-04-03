@@ -1,1 +1,4 @@
 BasedOnStyle: Mozilla
+ColumnLimit: 120
+IndentCaseLabels: false
+BreakBeforeBraces: Linux

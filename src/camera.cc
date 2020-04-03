@@ -81,8 +81,7 @@ Camera::DragTranslation(int x, int y)
 {
   auto const [x_o, y_o, target_o] = translation_origin_;
 
-  target_ =
-    target_o + (-(x - x_o) * side_ + (y - y_o) * up_) * move_rate_ * zoom_;
+  target_ = target_o + (-(x - x_o) * side_ + (y - y_o) * up_) * move_rate_ * zoom_;
 
   UpdateViewCoord();
 }
@@ -158,24 +157,24 @@ Camera::Moving(Camera::Translate direction)
 {
   float const speed = 10.f * move_rate_ * zoom_;
   switch (direction) {
-    case Translate::kUp:
-      target_ += -up_ * speed;
-      break;
-    case Translate::kDown:
-      target_ += up_ * speed;
-      break;
-    case Translate::kRight:
-      target_ += -side_ * speed;
-      break;
-    case Translate::kLeft:
-      target_ += side_ * speed;
-      break;
-    case Translate::kForward:
-      target_ += forward_ * speed;
-      break;
-    case Translate::kBackward:
-      target_ += -forward_ * speed;
-      break;
+  case Translate::kUp:
+    target_ += -up_ * speed;
+    break;
+  case Translate::kDown:
+    target_ += up_ * speed;
+    break;
+  case Translate::kRight:
+    target_ += -side_ * speed;
+    break;
+  case Translate::kLeft:
+    target_ += side_ * speed;
+    break;
+  case Translate::kForward:
+    target_ += forward_ * speed;
+    break;
+  case Translate::kBackward:
+    target_ += -forward_ * speed;
+    break;
   }
 
   UpdateViewCoord();
@@ -185,18 +184,18 @@ void
 Camera::Turning(Camera::Rotate direction)
 {
   switch (direction) {
-    case Rotate::kClockwise:
-      theta_ = theta_ + 0.1f;
-      break;
-    case Rotate::kCounterClockwise:
-      theta_ = theta_ - 0.1f;
-      break;
-    case Rotate::kPitchUp:
-      phi_ = phi_ - 0.1f;
-      break;
-    case Rotate::kPitchDown:
-      phi_ = phi_ + 0.1f;
-      break;
+  case Rotate::kClockwise:
+    theta_ = theta_ + 0.1f;
+    break;
+  case Rotate::kCounterClockwise:
+    theta_ = theta_ - 0.1f;
+    break;
+  case Rotate::kPitchUp:
+    phi_ = phi_ - 0.1f;
+    break;
+  case Rotate::kPitchDown:
+    phi_ = phi_ + 0.1f;
+    break;
   }
 
   phi_ = NormRadian(phi_);

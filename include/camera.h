@@ -30,8 +30,7 @@ class Camera
   Camera& operator=(Camera const&) = delete;
 
 public:
-  enum class Translate
-  {
+  enum class Translate {
     kUp,
     kDown,
     kLeft,
@@ -39,8 +38,7 @@ public:
     kForward,
     kBackward,
   };
-  enum class Rotate
-  {
+  enum class Rotate {
     kClockwise,
     kCounterClockwise,
     kPitchUp,
