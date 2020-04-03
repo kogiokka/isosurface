@@ -19,9 +19,9 @@ class Scene
   unsigned int shader_id_;
   bool quit_;
   GLuint vbo_;
-  Camera camera_;
   SDL_GLContext context_;
   std::vector<std::pair<std::unique_ptr<Shader>, std::function<void(void)>>> shaders_;
+  std::unique_ptr<Camera> camera_;
   std::unique_ptr<SDL_Window, std::function<void(SDL_Window*)>> window_;
 
 private:

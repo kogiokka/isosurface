@@ -41,10 +41,10 @@ public:
   };
   enum class Rotate
   {
-    kThetaCW,
-    kThetaCCW,
-    kPhiUp,
-    kPhiDown,
+    kClockwise,
+    kCounterClockwise,
+    kPitchUp,
+    kPitchDown,
   };
   Camera();
   ~Camera();
@@ -66,4 +66,5 @@ public:
 
 private:
   glm::vec3 CartesianCoord(float theta, float phi) const;
+  inline float NormRadian(float radian);
 };

@@ -63,20 +63,9 @@ void
 Camera::DragRotation(int x, int y)
 {
   auto const [x_o, y_o, theta_o, phi_o] = rotation_origin_;
-  constexpr float full = 6.2831853f;
 
-  theta_ = horiz_rotate_dir * (x - x_o) * rotate_rate_ + theta_o;
-  phi_ = -(y - y_o) * rotate_rate_ + phi_o;
-
-  // Restrict both theta and phi to being between 0 and 360 degrees.
-  if (theta_ < 0.f)
-    theta_ += full;
-  else if (theta_ > full)
-    theta_ -= full;
-  if (phi_ < 0.f)
-    phi_ += full;
-  else if (phi_ > full)
-    phi_ -= full;
+  theta_ = NormRadian(horiz_rotate_dir * (x - x_o) * rotate_rate_ + theta_o);
+  phi_ = NormRadian(-(y - y_o) * rotate_rate_ + phi_o);
 
   UpdateViewCoord();
 }
@@ -113,14 +102,14 @@ Camera::SetAspectRatio(int width, int height)
 void
 Camera::SetPhi(float phi)
 {
-  phi_ = phi;
+  phi_ = NormRadian(phi);
   UpdateViewCoord();
 }
 
 void
 Camera::SetTheta(float theta)
 {
-  theta_ = theta;
+  theta_ = NormRadian(theta);
   UpdateViewCoord();
 }
 
@@ -195,23 +184,36 @@ Camera::Moving(Camera::Translate direction)
 void
 Camera::Turning(Camera::Rotate direction)
 {
-  constexpr float max_phi = 3.10f;
-  constexpr float min_phi = 0.04f;
-
   switch (direction) {
-    case Rotate::kThetaCW:
-      theta_ += 0.1f;
+    case Rotate::kClockwise:
+      theta_ = theta_ + 0.1f;
       break;
-    case Rotate::kThetaCCW:
-      theta_ -= 0.1f;
+    case Rotate::kCounterClockwise:
+      theta_ = theta_ - 0.1f;
       break;
-    case Rotate::kPhiUp:
-      phi_ = std::max(min_phi, phi_ - 0.1f);
+    case Rotate::kPitchUp:
+      phi_ = phi_ - 0.1f;
       break;
-    case Rotate::kPhiDown:
-      phi_ = std::min(max_phi, phi_ + 0.1f);
+    case Rotate::kPitchDown:
+      phi_ = phi_ + 0.1f;
       break;
   }
 
+  phi_ = NormRadian(phi_);
+  theta_ = NormRadian(theta_);
   UpdateViewCoord();
+}
+
+// Restrict both theta and phi to being between 0 and 360 degrees.
+float
+Camera::NormRadian(float radian)
+{
+  constexpr float full = 6.2831853f;
+
+  if (radian < 0.f)
+    return radian + full;
+  else if (radian > full)
+    return radian - full;
+  else
+    return radian;
 }

@@ -3,8 +3,13 @@
 Scene::Scene()
   : width_(800)
   , height_(600)
+  , vertex_count_(0)
   , shader_id_(0)
   , quit_(false)
+  , vbo_(0)
+  , context_(nullptr)
+  , shaders_(0)
+  , camera_(std::make_unique<Camera>())
   , window_(nullptr, SDL_DestroyWindow){};
 
 void
@@ -13,9 +18,9 @@ Scene::DefaultShaderRoutine()
   auto& s = shaders_[shader_id_].first;
   s->SetVector3("light_color", 1.f, 1.f, 1.f);
   s->SetVector3("object_color", 0.f, 0.5f, 1.f);
-  s->SetMatrix4("view_proj_matrix", camera_.ViewProjectionMatrix());
-  s->SetVector3("light_src", camera_.Position());
-  s->SetVector3("view_pos", camera_.Position());
+  s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
+  s->SetVector3("light_src", camera_->Position());
+  s->SetVector3("view_pos", camera_->Position());
 }
 
 void
@@ -25,10 +30,10 @@ Scene::CrossSectionShaderRoutine()
   s->SetVector3("light_color", 1.f, 1.f, 1.f);
   s->SetVector3("object_color", 0.f, 0.5f, 1.f);
   s->SetVector3("cross_section.point", 30.0f, 60.0f, 50.0f);
-  s->SetMatrix4("view_proj_matrix", camera_.ViewProjectionMatrix());
-  s->SetVector3("light_src", camera_.Position());
-  s->SetVector3("view_pos", camera_.Position());
-  s->SetVector3("cross_section.normal", camera_.ForwardVector());
+  s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
+  s->SetVector3("light_src", camera_->Position());
+  s->SetVector3("view_pos", camera_->Position());
+  s->SetVector3("cross_section.normal", camera_->ForwardVector());
 }
 
 void
@@ -93,7 +98,7 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
     s.first->Link();
 
   shaders_[shader_id_].first->Use();
-  camera_.SetAspectRatio(AspectRatio());
+  camera_->SetAspectRatio(AspectRatio());
 
   glEnable(GL_DEPTH_TEST);
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -106,28 +111,32 @@ Scene::KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key)
     case SDL_KEYDOWN:
       switch (key.keysym.sym) {
         case SDLK_w:
-          camera_.Moving(Camera::Translate::kUp);
+          camera_->Moving(Camera::Translate::kUp);
           break;
         case SDLK_s:
-          camera_.Moving(Camera::Translate::kDown);
+          camera_->Moving(Camera::Translate::kDown);
           break;
         case SDLK_a:
-          camera_.Moving(Camera::Translate::kLeft);
+          camera_->Moving(Camera::Translate::kLeft);
           break;
         case SDLK_d:
-          camera_.Moving(Camera::Translate::kRight);
+          camera_->Moving(Camera::Translate::kRight);
           break;
         case SDLK_RIGHT:
-          camera_.Turning(Camera::Rotate::kThetaCW);
+          camera_->Turning(Camera::Rotate::kClockwise);
           break;
         case SDLK_LEFT:
-          camera_.Turning(Camera::Rotate::kThetaCCW);
+          camera_->Turning(Camera::Rotate::kCounterClockwise);
           break;
         case SDLK_UP:
-          camera_.Turning(Camera::Rotate::kPhiUp);
+          camera_->Turning(Camera::Rotate::kPitchDown);
           break;
         case SDLK_DOWN:
-          camera_.Turning(Camera::Rotate::kPhiDown);
+          camera_->Turning(Camera::Rotate::kPitchUp);
+          break;
+        case SDLK_r:
+          camera_.reset(new Camera());
+          camera_->SetAspectRatio(AspectRatio());
           break;
         case SDLK_q:
           if (key.keysym.mod & KMOD_CTRL)
@@ -151,10 +160,10 @@ Scene::MouseButtonControl(Uint32 type, const SDL_MouseButtonEvent& button)
     case SDL_MOUSEBUTTONDOWN:
       switch (button.button) {
         case SDL_BUTTON_LEFT:
-          camera_.InitDragTranslation(button.x, button.y);
+          camera_->InitDragTranslation(button.x, button.y);
           break;
         case SDL_BUTTON_RIGHT:
-          camera_.InitDragRotation(button.x, button.y);
+          camera_->InitDragRotation(button.x, button.y);
           break;
       }
       break;
@@ -172,7 +181,7 @@ Scene::MouseButtonControl(Uint32 type, const SDL_MouseButtonEvent& button)
 void
 Scene::MouseWheelControl(const SDL_MouseWheelEvent& wheel)
 {
-  camera_.WheelZoom(-wheel.y);
+  camera_->WheelZoom(-wheel.y);
 }
 
 void
@@ -180,10 +189,10 @@ Scene::MouseMotionControl(SDL_MouseMotionEvent const& motion)
 {
   switch (motion.state) {
     case SDL_BUTTON_LMASK:
-      camera_.DragTranslation(motion.x, motion.y);
+      camera_->DragTranslation(motion.x, motion.y);
       break;
     case SDL_BUTTON_RMASK:
-      camera_.DragRotation(motion.x, motion.y);
+      camera_->DragRotation(motion.x, motion.y);
       break;
   }
 }
@@ -251,7 +260,7 @@ Scene::EventHandler()
         switch (event.window.event) {
           case SDL_WINDOWEVENT_RESIZED:
             SDL_GetWindowSize(window_.get(), &width_, &height_);
-            camera_.SetAspectRatio(width_, height_);
+            camera_->SetAspectRatio(width_, height_);
             break;
         }
         break;
