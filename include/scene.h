@@ -23,6 +23,8 @@ class Scene
   std::vector<std::pair<std::unique_ptr<Shader>, std::function<void(void)>>> shaders_;
   std::unique_ptr<Camera> camera_;
   std::unique_ptr<SDL_Window, std::function<void(SDL_Window*)>> window_;
+  Scene(Scene const&) = delete;
+  Scene& operator=(Scene const&) = delete;
 
 private:
   void DefaultShaderRoutine();

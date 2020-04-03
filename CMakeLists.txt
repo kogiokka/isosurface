@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
   src/shader.cc
   src/constants.cc
   src/isosurface.cc
+  src/model.cc
 )
 
 target_link_libraries(${PROJECT_NAME}

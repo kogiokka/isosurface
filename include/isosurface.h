@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "glm/glm.hpp"
@@ -14,12 +15,10 @@
 
 class Isosurface
 {
-  unsigned int target_value_;
-  unsigned int vertex_count_;
+  unsigned int isovalue_;
   std::array<int, 3> dimensions_;
-  std::vector<unsigned char> isovalues_;
   std::vector<glm::vec3> gradients_;
-  std::vector<float> render_data_;
+  std::vector<unsigned char> scalar_field_;
 
   class GridCell
   {
@@ -35,14 +34,12 @@ class Isosurface
   };
 
 public:
-  Isosurface();
+  Isosurface(float isovalue);
   ~Isosurface();
-  void ReadRawInfo(std::string_view const filepath);
-  void ReadRaw(std::string_view const filepath);
   void CalculateGradient();
-  void MarchingCube();
-  float const* RenderData() const;
-  unsigned int RenderVertexCount() const;
+  std::pair<unsigned int, std::vector<float>> MarchingCube();
+  void ReadInfo(std::string_view const filepath);
+  void ReadRaw(std::string_view const filepath);
 
 private:
   std::array<float, 6> InterpVertexAttribs(glm::vec3 const& v1,
