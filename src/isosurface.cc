@@ -219,7 +219,7 @@ Isosurface::SetModelDimensions(std::array<int, 3> dimensions)
 }
 
 void
-Isosurface::SetModelRatio(std::array<int, 3> ratio)
+Isosurface::SetModelRatio(std::array<float, 3> ratio)
 {
   model_ratio_ = ratio;
 }

@@ -14,7 +14,7 @@ class Isosurface
 {
   unsigned int isovalue_;
   std::array<int, 3> dimensions_;
-  std::array<int, 3> model_ratio_;
+  std::array<float, 3> model_ratio_;
   std::vector<glm::vec3> gradients_;
   std::vector<float> scalar_field_;
 
@@ -36,7 +36,7 @@ public:
   ~Isosurface();
   void SetIsovalue(float value);
   void SetModelDimensions(std::array<int, 3> dimensions);
-  void SetModelRatio(std::array<int, 3> ratio);
+  void SetModelRatio(std::array<float, 3> ratio);
   std::pair<unsigned int, std::vector<float>> MarchingCube();
 
 private:

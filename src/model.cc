@@ -33,7 +33,7 @@ Model::Model(std::string const inf, std::string const raw)
 
   index = 0;
   while (std::getline(attr_ratio, token, ':')) {
-    ratio_[index] = std::stoi(token);
+    ratio_[index] = std::stof(token);
     ++index;
   }
 };
@@ -65,7 +65,7 @@ Model::Dimension()
   return dimensions_;
 }
 
-std::array<int, 3>
+std::array<float, 3>
 Model::Ratio()
 {
   return ratio_;
@@ -90,6 +90,11 @@ Model::ScalarField()
   file.read(reinterpret_cast<char*>(buf.data()), file_size);
   file.close();
 
+  // int size = buf.size() * 0.5;
+  // unsigned short* tmp;
+  // tmp = static_cast<unsigned short*>(static_cast<void*>(buf.data()));
+  // std::vector<float> field;
+  // std::copy(tmp, tmp + size, std::back_inserter(field));
   std::vector<float> field;
   field.reserve(buf.size() * 4);
   for (auto const& v : buf)

@@ -9,7 +9,7 @@ Camera::Camera()
   , aspect_ratio_(0.f)
   , view_volume_size_(200.f)
   , move_rate_(0.4f)
-  , rotate_rate_(0.005f)
+  , rotate_rate_(0.01f)
   , zoom_(0.8f)
   , horiz_rotate_dir(1)
 {
