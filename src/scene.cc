@@ -129,12 +129,16 @@ Scene::KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key)
         case SDLK_DOWN:
           camera_.Turning(Camera::Rotate::kPhiDown);
           break;
+        case SDLK_q:
+          if (key.keysym.mod & KMOD_CTRL)
+            quit_ = true;
+          break;
       }
       break;
     case SDL_KEYUP:
       switch (key.keysym.sym) {
         case SDLK_ESCAPE:
-          quit_ = true;
+          break;
       }
       break;
   }
