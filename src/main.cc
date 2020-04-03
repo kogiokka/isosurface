@@ -6,15 +6,17 @@
 int
 main(int argc, char** argv)
 {
-  Model engine;
-  Isosurface iso_model(80.f);
-  iso_model.ReadInfo("data/engine.inf");
-  iso_model.ReadRaw("data/engine.raw");
-  iso_model.CalculateGradient();
-  engine.SetRenderData(iso_model.MarchingCube());
+  Model engine("data/foot.inf", "data/foot.raw");
+  Isosurface isosurface(engine.ScalarField());
+  isosurface.SetIsovalue(95.f);
+  isosurface.SetModelDimensions(engine.Dimension());
+  isosurface.SetModelRatio(engine.Ratio());
+
+  engine.SetRenderData(isosurface.MarchingCube());
 
   Scene scene;
   scene.Init();
+  scene.SetPosition(engine.Center());
   scene.SetupOpenGL(engine.VertexCount(), engine.RenderData());
   scene.Render();
 

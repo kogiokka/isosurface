@@ -8,9 +8,10 @@ Scene::Scene()
   , quit_(false)
   , vbo_(0)
   , context_(nullptr)
-  , shaders_(0)
+  , center_{ 0.f, 0.f, 0.f }
   , camera_(std::make_unique<Camera>())
-  , window_(nullptr, SDL_DestroyWindow){};
+  , window_(nullptr, SDL_DestroyWindow)
+  , shaders_(0){};
 
 void
 Scene::DefaultShaderRoutine()
@@ -81,10 +82,8 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
 
-  auto const default_routine = std::bind(&Scene::DefaultShaderRoutine, this);
-  auto const cross_section_routine = std::bind(&Scene::CrossSectionShaderRoutine, this);
-  shaders_.push_back(std::make_pair(std::make_unique<Shader>(), default_routine));
-  shaders_.push_back(std::make_pair(std::make_unique<Shader>(), cross_section_routine));
+  shaders_.emplace_back(std::make_unique<Shader>(), std::bind(&Scene::DefaultShaderRoutine, this));
+  shaders_.emplace_back(std::make_unique<Shader>(), std::bind(&Scene::CrossSectionShaderRoutine, this));
   shaders_[0].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
   shaders_[0].first->Attach(GL_FRAGMENT_SHADER, "shader/default.frag");
   shaders_[1].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
@@ -95,6 +94,7 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
 
   shaders_[shader_id_].first->Use();
   camera_->SetAspectRatio(AspectRatio());
+  camera_->SetCenter(center_[0], center_[1], center_[2]);
 
   glEnable(GL_DEPTH_TEST);
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -133,6 +133,7 @@ Scene::KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key)
     case SDLK_r:
       camera_.reset(new Camera());
       camera_->SetAspectRatio(AspectRatio());
+      camera_->SetCenter(center_[0], center_[1], center_[2]);
       break;
     case SDLK_q:
       if (key.keysym.mod & KMOD_CTRL)
@@ -260,6 +261,18 @@ Scene::EventHandler()
       break;
     }
   }
+}
+
+void
+Scene::SetPosition(float x, float y, float z)
+{
+  center_ = { x, y, z };
+}
+
+void
+Scene::SetPosition(std::array<int, 3> pos)
+{
+  std::copy(begin(pos), end(pos), begin(center_));
 }
 
 Scene::~Scene()

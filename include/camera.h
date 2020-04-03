@@ -2,6 +2,7 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include <array>
 #include <cstdio>
 #include <tuple>
 
@@ -12,7 +13,7 @@ class Camera
   glm::vec3 forward_;
   glm::vec3 side_;
   glm::vec3 up_;
-  glm::vec3 target_;
+  glm::vec3 center_;
   float theta_;
   float phi_;
   float radius_;
@@ -48,6 +49,7 @@ public:
   ~Camera();
   void SetAspectRatio(float ratio);
   void SetAspectRatio(int width, int height);
+  void SetCenter(float x, float y, float z);
   void SetTheta(float theta);
   void SetPhi(float phi);
   void UpdateViewCoord();

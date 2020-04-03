@@ -2,13 +2,13 @@
 
 Camera::Camera()
   : world_up_{ 0.f, 1.f, 0.f }
-  , target_{ 70.f, 100.f, 50.f }
+  , center_{ 0.f, 0.f, 0.f }
   , theta_(0.3f)
   , phi_(1.4f)
   , radius_(600.f)
   , aspect_ratio_(0.f)
   , view_volume_size_(200.f)
-  , move_rate_(0.8f)
+  , move_rate_(0.4f)
   , rotate_rate_(0.005f)
   , zoom_(0.8f)
   , horiz_rotate_dir(1)
@@ -39,8 +39,8 @@ Camera::UpdateViewCoord()
   constexpr float degree_45 = 0.785f;
   world_up_ = normalize(-radius_ * CartesianCoord(theta_, phi_ + degree_45));
 
-  position_ = radius_ * CartesianCoord(theta_, phi_) + target_;
-  forward_ = normalize(target_ - position_);
+  position_ = radius_ * CartesianCoord(theta_, phi_) + center_;
+  forward_ = normalize(center_ - position_);
   side_ = normalize(cross(forward_, world_up_));
   up_ = cross(side_, forward_);
 }
@@ -73,7 +73,7 @@ Camera::DragRotation(int x, int y)
 void
 Camera::InitDragTranslation(int x, int y)
 {
-  translation_origin_ = std::make_tuple(x, y, target_);
+  translation_origin_ = std::make_tuple(x, y, center_);
 }
 
 void
@@ -81,7 +81,7 @@ Camera::DragTranslation(int x, int y)
 {
   auto const [x_o, y_o, target_o] = translation_origin_;
 
-  target_ = target_o + (-(x - x_o) * side_ + (y - y_o) * up_) * move_rate_ * zoom_;
+  center_ = target_o + (-(x - x_o) * side_ + (y - y_o) * up_) * move_rate_ * zoom_;
 
   UpdateViewCoord();
 }
@@ -96,6 +96,12 @@ void
 Camera::SetAspectRatio(int width, int height)
 {
   aspect_ratio_ = static_cast<float>(width) / static_cast<float>(height);
+}
+
+void
+Camera::SetCenter(float x, float y, float z)
+{
+  center_ = glm::vec3{ x, y, z };
 }
 
 void
@@ -133,7 +139,7 @@ Camera::ViewProjectionMatrix() const
 {
   assert(aspect_ratio_ != 0.0);
 
-  glm::mat4 const view = glm::lookAt(position_, target_, world_up_);
+  glm::mat4 const view = glm::lookAt(position_, center_, world_up_);
 
   float const v = view_volume_size_ * aspect_ratio_ * zoom_;
   float const h = view_volume_size_ * zoom_;
@@ -158,22 +164,22 @@ Camera::Moving(Camera::Translate direction)
   float const speed = 10.f * move_rate_ * zoom_;
   switch (direction) {
   case Translate::kUp:
-    target_ += -up_ * speed;
+    center_ += -up_ * speed;
     break;
   case Translate::kDown:
-    target_ += up_ * speed;
+    center_ += up_ * speed;
     break;
   case Translate::kRight:
-    target_ += -side_ * speed;
+    center_ += -side_ * speed;
     break;
   case Translate::kLeft:
-    target_ += side_ * speed;
+    center_ += side_ * speed;
     break;
   case Translate::kForward:
-    target_ += forward_ * speed;
+    center_ += forward_ * speed;
     break;
   case Translate::kBackward:
-    target_ += -forward_ * speed;
+    center_ += -forward_ * speed;
     break;
   }
 

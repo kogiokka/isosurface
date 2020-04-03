@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <functional>
 #include <memory>
 #include <tuple>
@@ -20,9 +21,10 @@ class Scene
   bool quit_;
   GLuint vbo_;
   SDL_GLContext context_;
-  std::vector<std::pair<std::unique_ptr<Shader>, std::function<void(void)>>> shaders_;
+  std::array<float, 3> center_;
   std::unique_ptr<Camera> camera_;
   std::unique_ptr<SDL_Window, std::function<void(SDL_Window*)>> window_;
+  std::vector<std::pair<std::unique_ptr<Shader>, std::function<void(void)>>> shaders_;
   Scene(Scene const&) = delete;
   Scene& operator=(Scene const&) = delete;
 
@@ -35,6 +37,8 @@ public:
   ~Scene();
   void Init();
   void SetupOpenGL(unsigned int count, float const* data);
+  void SetPosition(float x, float y, float z);
+  void SetPosition(std::array<int, 3> pos);
   float AspectRatio() const;
   void Render();
   void EventHandler();

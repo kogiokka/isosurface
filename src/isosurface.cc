@@ -1,7 +1,7 @@
 #include "isosurface.h"
 
-Isosurface::Isosurface(float isovalue)
-  : isovalue_(isovalue)
+Isosurface::Isosurface(std::vector<float> scalar_field)
+  : scalar_field_(scalar_field)
 {
 }
 
@@ -57,21 +57,20 @@ Isosurface::CalculateGradient()
 std::pair<unsigned int, std::vector<float>>
 Isosurface::MarchingCube()
 {
-  unsigned int vertex_count = 0;
+  CalculateGradient();
+
   std::vector<float> data;
+  unsigned int vertex_count = 0;
 
   int const& xsize = dimensions_[0];
   int const& ysize = dimensions_[1];
   int const& zsize = dimensions_[2];
 
-  data.reserve(xsize * ysize * zsize * 2);
-
   for (int z = 0; z < zsize - 1; ++z) {
     for (int y = 0; y < ysize - 1; ++y) {
       for (int x = 0; x < xsize - 1; ++x) {
-        GridCell cell(x, y, z);
         unsigned short cube_index = 0;
-
+        GridCell cell(x, y, z);
         if (Value(cell[0]) < isovalue_)
           cube_index |= 1;
         if (Value(cell[1]) < isovalue_)
@@ -129,55 +128,8 @@ Isosurface::MarchingCube()
       }
     }
   }
+  data.shrink_to_fit();
   return std::make_pair(vertex_count, data);
-}
-
-void
-Isosurface::ReadInfo(const std::string_view filepath)
-{
-  std::ifstream file(filepath.data(), std::ios::binary);
-  if (file.fail()) {
-    std::fprintf(stderr, "Failed to read raw file.\n");
-    exit(EXIT_FAILURE);
-  }
-  std::string value;
-  std::vector<std::string> attrs;
-  while (std::getline(file, value)) {
-    std::string::size_type n = value.find("=");
-    if (n == std::string::npos)
-      continue;
-    attrs.push_back(value.substr(n + 1));
-  }
-
-  std::istringstream ss(attrs.at(0));
-  std::string dimen;
-  int index = 0;
-  while (std::getline(ss, dimen, ':')) {
-    dimensions_[index] = std::stoi(dimen);
-    ++index;
-  }
-}
-
-void
-Isosurface::ReadRaw(const std::string_view filepath)
-{
-  assert(dimensions_[0] > 0);
-  assert(dimensions_[1] > 0);
-  assert(dimensions_[2] > 0);
-
-  std::ifstream file(filepath.data(), std::ios::binary);
-  if (file.fail()) {
-    fprintf(stderr, "Failed to read raw file.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  auto file_size = std::filesystem::file_size(filepath);
-
-  std::vector<char> tmp(file_size);
-  file.read(tmp.data(), file_size);
-  file.close();
-
-  scalar_field_.assign(std::make_move_iterator(begin(tmp)), std::make_move_iterator(end(tmp)));
 }
 
 std::array<float, 6>
@@ -190,41 +142,42 @@ Isosurface::InterpVertexAttribs(glm::vec3 const& v1, glm::vec3 const& v2)
 
   glm::vec3 const& g1 = Gradient(v1.x, v1.y, v1.z);
   glm::vec3 const& g2 = Gradient(v2.x, v2.y, v2.z);
+  glm::vec3 const p1{ v1.x * model_ratio_[0], v1.y * model_ratio_[1], v1.z * model_ratio_[2] };
+  glm::vec3 const p2{ v2.x * model_ratio_[0], v2.y * model_ratio_[1], v2.z * model_ratio_[2] };
 
   if (std::abs(value1 - value2) < min) {
-    glm::vec3 const v = (v1 + v2) * 0.5f;
+    glm::vec3 const v = (p1 + p2) * 0.5f;
     glm::vec3 const g = glm::normalize((g1 + g2) * 0.5f);
     return std::array<float, 6>{ v.x, v.y, v.z, g.x, g.y, g.z };
   }
   if (std::abs(isovalue_ - value1) < min) {
-    return std::array<float, 6>{ v1.x, v1.y, v1.z, g1.x, g1.y, g1.z };
+    return std::array<float, 6>{ p1.x, p1.y, p1.z, g1.x, g1.y, g1.z };
   }
   if (std::abs(isovalue_ - value2) < min) {
-    return std::array<float, 6>{ v2.x, v2.y, v2.z, g2.x, g2.y, g2.z };
+    return std::array<float, 6>{ p2.x, p2.y, p2.z, g2.x, g2.y, g2.z };
   }
 
   glm::vec3 const g = glm::normalize(ratio * (g2 - g1) + g1);
-  glm::vec3 const v = ratio * (v2 - v1) + v1;
-
+  glm::vec3 const v = ratio * (p2 - p1) + p1;
   return std::array<float, 6>{ v.x, v.y, v.z, g.x, g.y, g.z };
 }
 
-inline unsigned short
+inline float
 Isosurface::Value(int x, int y, int z) const
 {
-  return static_cast<unsigned short>(scalar_field_.at(Index(x, y, z)));
+  return scalar_field_[Index(x, y, z)];
 }
 
-inline unsigned short
+inline float
 Isosurface::Value(glm::vec3 const& v) const
 {
-  return static_cast<unsigned short>(scalar_field_.at(Index(v.x, v.y, v.z)));
+  return Value(v.x, v.y, v.z);
 }
 
 inline glm::vec3 const&
 Isosurface::Gradient(int x, int y, int z) const
 {
-  return gradients_.at(Index(x, y, z));
+  return gradients_[Index(x, y, z)];
 }
 
 inline int
@@ -236,21 +189,39 @@ Isosurface::Index(int x, int y, int z) const
 }
 
 inline float
-Isosurface::CenteredDifference(unsigned short front, unsigned short back) const
+Isosurface::CenteredDifference(float front, float back) const
 {
-  return (static_cast<float>(back) - static_cast<float>(front)) / 2;
+  return (back - front) / 2;
 }
 
 inline float
-Isosurface::BackwardDifference(unsigned short self, unsigned short back) const
+Isosurface::BackwardDifference(float self, float back) const
 {
-  return (static_cast<float>(back) - static_cast<float>(self));
+  return back - self;
 }
 
 inline float
-Isosurface::ForwardDifference(unsigned short self, unsigned short front) const
+Isosurface::ForwardDifference(float self, float front) const
 {
   return BackwardDifference(front, self);
+}
+
+void
+Isosurface::SetIsovalue(float value)
+{
+  isovalue_ = value;
+}
+
+void
+Isosurface::SetModelDimensions(std::array<int, 3> dimensions)
+{
+  dimensions_ = dimensions;
+}
+
+void
+Isosurface::SetModelRatio(std::array<int, 3> ratio)
+{
+  model_ratio_ = ratio;
 }
 
 Isosurface::GridCell::GridCell(int x, int y, int z)
