@@ -36,6 +36,18 @@ Model::Model(std::string const inf, std::string const raw)
     ratio_[index] = std::stof(token);
     ++index;
   }
+
+  std::string type = attrs.at(2);
+  if (type.back() == '\r')
+    type.pop_back();
+  if (type == "unsigned_char") {
+    data_type_ = DataType::kUnsignedChar;
+  } else if (type == "unsigned_short") {
+    data_type_ = DataType::kUnsignedShort;
+  } else {
+    std::fprintf(stderr, "Unknown model data type: %s\n", type.c_str());
+    exit(EXIT_FAILURE);
+  }
 };
 
 Model::~Model(){};
@@ -90,15 +102,17 @@ Model::ScalarField()
   file.read(reinterpret_cast<char*>(buf.data()), file_size);
   file.close();
 
-  // int size = buf.size() * 0.5;
-  // unsigned short* tmp;
-  // tmp = static_cast<unsigned short*>(static_cast<void*>(buf.data()));
-  // std::vector<float> field;
-  // std::copy(tmp, tmp + size, std::back_inserter(field));
   std::vector<float> field;
-  field.reserve(buf.size() * 4);
-  for (auto const& v : buf)
-    field.push_back(static_cast<float>(v));
+  switch (data_type_) {
+  case DataType::kUnsignedChar:
+    field.insert(begin(field), buf.data(), buf.data() + file_size);
+    break;
+  case DataType::kUnsignedShort:;
+    field.insert(begin(field),
+                 reinterpret_cast<unsigned short*>(buf.data()),
+                 reinterpret_cast<unsigned short*>(buf.data()) + static_cast<int>(0.5f * file_size));
+    break;
+  }
   return field;
 }
 

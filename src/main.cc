@@ -6,18 +6,18 @@
 int
 main(int argc, char** argv)
 {
-  Model engine("data/foot.inf", "data/foot.raw");
-  Isosurface isosurface(engine.ScalarField());
-  isosurface.SetIsovalue(95.f);
-  isosurface.SetModelDimensions(engine.Dimension());
-  isosurface.SetModelRatio(engine.Ratio());
+  Model model("data/engine.inf", "data/engine.raw");
+  Isosurface isosurface(model.ScalarField());
+  isosurface.SetIsovalue(80.f);
+  isosurface.SetModelDimensions(model.Dimension());
+  isosurface.SetModelRatio(model.Ratio());
 
-  engine.SetRenderData(isosurface.MarchingCube());
+  model.SetRenderData(isosurface.MarchingCube());
 
   Scene scene;
   scene.Init();
-  scene.SetPosition(engine.Center());
-  scene.SetupOpenGL(engine.VertexCount(), engine.RenderData());
+  scene.SetPosition(model.Center());
+  scene.SetupOpenGL(model.VertexCount(), model.RenderData());
   scene.Render();
 
   return 0;

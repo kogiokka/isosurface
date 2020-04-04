@@ -12,12 +12,15 @@
 
 class Model
 {
+  enum class DataType { kUnsignedChar, kUnsignedShort };
   std::string inf_file_;
   std::string raw_file_;
+  DataType data_type_;
   unsigned int vertex_count_;
   std::array<int, 3> dimensions_;
   std::array<float, 3> ratio_;
   std::vector<float> render_data_;
+
 
 public:
   Model(std::string const inf, std::string const raw);
