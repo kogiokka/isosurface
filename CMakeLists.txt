@@ -5,7 +5,6 @@ project(isosurface LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "-O3")
 
 find_package(SDL2 REQUIRED)
 
@@ -16,14 +15,12 @@ include_directories(ext/glm/include)
 add_subdirectory(ext/glad)
 add_subdirectory(ext/glm)
 
+file(GLOB SOURCES CONFIGURE_DEPENDS
+  src/*.cc
+)
+
 add_executable(${PROJECT_NAME}
-  src/main.cc
-  src/camera.cc
-  src/scene.cc
-  src/shader.cc
-  src/constants.cc
-  src/isosurface.cc
-  src/model.cc
+  ${SOURCES}
 )
 
 target_link_libraries(${PROJECT_NAME}
