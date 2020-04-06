@@ -6,14 +6,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(SDL2 REQUIRED)
+# find_package(SDL2 REQUIRED)
 
 include_directories(include/)
 include_directories(ext/glad/include)
 include_directories(ext/glm/include)
 
+add_subdirectory(ext/SDL2)
 add_subdirectory(ext/glad)
 add_subdirectory(ext/glm)
+
+include_directories(ext/SDL2/include)
+add_subdirectory(ext/imgui)
 
 file(GLOB SOURCES CONFIGURE_DEPENDS
   src/*.cc
@@ -25,8 +29,9 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   glad
-  SDL2
+  SDL2-static
   glm
+  imgui
 )
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")

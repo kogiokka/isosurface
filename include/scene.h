@@ -6,7 +6,7 @@
 #include <tuple>
 #include <vector>
 
-#include "SDL2/SDL.h"
+#include "SDL.h"
 #include "camera.h"
 #include "constants.h"
 #include "glad/glad.h"
