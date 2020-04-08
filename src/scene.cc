@@ -21,7 +21,7 @@ Scene::Scene()
 void
 Scene::DefaultShaderRoutine()
 {
-  auto& s = shaders_[shader_id_].first;
+  auto& s = shaders_[shader_id_];
   s->SetVector3("light_color", 1.f, 1.f, 1.f);
   s->SetVector3("model_color", model_color_);
   s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
@@ -32,7 +32,7 @@ Scene::DefaultShaderRoutine()
 void
 Scene::CrossSectionShaderRoutine()
 {
-  auto& s = shaders_[shader_id_].first;
+  auto& s = shaders_[shader_id_];
   s->SetVector3("light_color", 1.f, 1.f, 1.f);
   s->SetVector3("light_src", camera_->Position());
   s->SetVector3("model_color", model_color_);
@@ -51,7 +51,7 @@ Scene::Render()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shaders_[shader_id_].second();
+    shader_routines_[shader_id_]();
     gui_routines_[gui_id_]();
 
     glDrawArrays(GL_TRIANGLES, 0, vertex_count_);
@@ -95,20 +95,22 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
 
-  shaders_.emplace_back(std::make_unique<Shader>(), std::bind(&Scene::DefaultShaderRoutine, this));
-  shaders_.emplace_back(std::make_unique<Shader>(), std::bind(&Scene::CrossSectionShaderRoutine, this));
-  shaders_[0].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
-  shaders_[0].first->Attach(GL_FRAGMENT_SHADER, "shader/default.frag");
-  shaders_[1].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
-  shaders_[1].first->Attach(GL_FRAGMENT_SHADER, "shader/cross_section.frag");
+  shaders_.emplace_back(std::make_unique<Shader>());
+  shaders_[0]->Attach(GL_VERTEX_SHADER, "shader/default.vert");
+  shaders_[0]->Attach(GL_FRAGMENT_SHADER, "shader/default.frag");
+  shaders_.emplace_back(std::make_unique<Shader>());
+  shaders_[1]->Attach(GL_VERTEX_SHADER, "shader/default.vert");
+  shaders_[1]->Attach(GL_FRAGMENT_SHADER, "shader/cross_section.frag");
+  shader_routines_.emplace_back(std::bind(&Scene::DefaultShaderRoutine, this));
+  shader_routines_.emplace_back(std::bind(&Scene::CrossSectionShaderRoutine, this));
 
   gui_routines_.emplace_back(std::bind(&Scene::DefaultGui, this));
   gui_routines_.emplace_back(std::bind(&Scene::CrossSectionGui, this));
 
   for (auto const& s : shaders_)
-    s.first->Link();
+    s->Link();
 
-  shaders_[shader_id_].first->Use();
+  shaders_[shader_id_]->Use();
   camera_->SetAspectRatio(AspectRatio());
   camera_->SetCenter(center_);
 
@@ -128,12 +130,12 @@ Scene::DefaultGui()
       if (ImGui::MenuItem("Normal")) {
         shader_id_ = 0;
         gui_id_ = 0;
-        shaders_[shader_id_].first->Use();
+        shaders_[shader_id_]->Use();
       }
       if (ImGui::MenuItem("Cross Section")) {
         shader_id_ = 1;
         gui_id_ = 1;
-        shaders_[shader_id_].first->Use();
+        shaders_[shader_id_]->Use();
       }
       ImGui::EndMenu();
     }
@@ -157,12 +159,12 @@ Scene::CrossSectionGui()
       if (ImGui::MenuItem("Normal")) {
         shader_id_ = 0;
         gui_id_ = 0;
-        shaders_[shader_id_].first->Use();
+        shaders_[shader_id_]->Use();
       }
       if (ImGui::MenuItem("Cross Section")) {
         shader_id_ = 1;
         gui_id_ = 1;
-        shaders_[shader_id_].first->Use();
+        shaders_[shader_id_]->Use();
       }
       ImGui::EndMenu();
     }

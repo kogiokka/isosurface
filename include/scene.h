@@ -33,8 +33,9 @@ class Scene
   std::array<std::array<float, 3>, 3> cross_section_dir_;
   std::unique_ptr<Camera> camera_;
   std::unique_ptr<SDL_Window, std::function<void(SDL_Window*)>> window_;
+  std::vector<std::unique_ptr<Shader>> shaders_;
+  std::vector<std::function<void(void)>> shader_routines_;
   std::vector<std::function<void(void)>> gui_routines_;
-  std::vector<std::pair<std::unique_ptr<Shader>, std::function<void(void)>>> shaders_;
   Scene(Scene const&) = delete;
   Scene& operator=(Scene const&) = delete;
 
