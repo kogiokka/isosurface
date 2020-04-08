@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include_directories(include/)
 include_directories(ext/glad/include)
 include_directories(ext/glm/include)
+include_directories(ext/imgui)
 
 add_subdirectory(ext/SDL2)
 add_subdirectory(ext/glad)

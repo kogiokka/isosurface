@@ -8,7 +8,7 @@ out vec4 color;
 uniform vec3 light_src;
 uniform vec3 light_color;
 uniform vec3 view_pos;
-uniform vec3 object_color;
+uniform vec3 model_color;
 
 struct CrossSection
 {
@@ -22,7 +22,7 @@ bool IsCutOff()
 {
   float test_result = dot(normalize(cross_section.point - attr_pos), cross_section.normal);
 
-  if (test_result < 0.0)
+  if (test_result > 0.0)
     return false;
   else
     return true;
@@ -51,5 +51,5 @@ void main()
   float specular_I = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
   vec3 specular = specular_coef * specular_I * light_color;
 
-  color = vec4((ambient + diffusion + specular) * object_color, 1.0);
+  color = vec4((ambient + diffusion + specular) * model_color, 1.0);
 }

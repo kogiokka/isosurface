@@ -5,10 +5,15 @@ Scene::Scene()
   , height_(600)
   , vertex_count_(0)
   , shader_id_(0)
+  , gui_id_(0)
+  , cross_section_mode_(0)
   , quit_(false)
   , vbo_(0)
   , context_(nullptr)
   , center_{ 0.f, 0.f, 0.f }
+  , model_color_{ 0.f, 0.5f, 1.f }
+  , cross_section_point_{ 0.f, 0.f, 0.f }
+  , cross_section_dir_{ { { 1.f, 0.f, 0.f }, { 0.f, 1.f, 0.f }, { 0.f, 0.f, 1.f } } }
   , camera_(std::make_unique<Camera>())
   , window_(nullptr, SDL_DestroyWindow)
   , shaders_(0){};
@@ -18,7 +23,7 @@ Scene::DefaultShaderRoutine()
 {
   auto& s = shaders_[shader_id_].first;
   s->SetVector3("light_color", 1.f, 1.f, 1.f);
-  s->SetVector3("object_color", 0.f, 0.5f, 1.f);
+  s->SetVector3("model_color", model_color_);
   s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
   s->SetVector3("light_src", camera_->Position());
   s->SetVector3("view_pos", camera_->Position());
@@ -29,12 +34,12 @@ Scene::CrossSectionShaderRoutine()
 {
   auto& s = shaders_[shader_id_].first;
   s->SetVector3("light_color", 1.f, 1.f, 1.f);
-  s->SetVector3("object_color", 0.f, 0.5f, 1.f);
-  s->SetVector3("cross_section.point", 30.0f, 60.0f, 50.0f);
-  s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
   s->SetVector3("light_src", camera_->Position());
+  s->SetVector3("model_color", model_color_);
+  s->SetVector3("cross_section.point", cross_section_point_);
+  s->SetVector3("cross_section.normal", cross_section_dir_.at(cross_section_mode_));
+  s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
   s->SetVector3("view_pos", camera_->Position());
-  s->SetVector3("cross_section.normal", camera_->ForwardVector());
 }
 
 void
@@ -47,8 +52,11 @@ Scene::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shaders_[shader_id_].second();
+    gui_routines_[gui_id_]();
 
     glDrawArrays(GL_TRIANGLES, 0, vertex_count_);
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     SDL_GL_SwapWindow(window_.get());
   }
@@ -58,6 +66,12 @@ void
 Scene::SetupOpenGL(unsigned int count, float const* data)
 {
   assert(count != 0);
+
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGui_ImplOpenGL3_Init();
+  ImGui_ImplSDL2_InitForOpenGL(window_.get(), context_);
+  ImportFonts("res/fonts");
 
   vertex_count_ = count;
   GLuint vao;
@@ -75,7 +89,6 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   // Interleaved data
   glVertexArrayVertexBuffer(vao, 0, vbo_, 0, stride * 2);
   glVertexArrayVertexBuffer(vao, 1, vbo_, stride, stride * 2);
-  // glVertexArrayVertexBuffer(vao, 1, vbo_, 0, stride * 2);
   glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
   glVertexArrayAttribFormat(vao, 1, 3, GL_FLOAT, GL_FALSE, 0);
 
@@ -89,15 +102,147 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   shaders_[1].first->Attach(GL_VERTEX_SHADER, "shader/default.vert");
   shaders_[1].first->Attach(GL_FRAGMENT_SHADER, "shader/cross_section.frag");
 
+  gui_routines_.emplace_back(std::bind(&Scene::DefaultGui, this));
+  gui_routines_.emplace_back(std::bind(&Scene::CrossSectionGui, this));
+
   for (auto const& s : shaders_)
     s.first->Link();
 
   shaders_[shader_id_].first->Use();
   camera_->SetAspectRatio(AspectRatio());
-  camera_->SetCenter(center_[0], center_[1], center_[2]);
+  camera_->SetCenter(center_);
 
   glEnable(GL_DEPTH_TEST);
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+}
+
+void
+Scene::DefaultGui()
+{
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplSDL2_NewFrame(window_.get());
+  ImGui::NewFrame();
+  ImGui::Begin("Model");
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("Mode")) {
+      if (ImGui::MenuItem("Normal")) {
+        shader_id_ = 0;
+        gui_id_ = 0;
+        shaders_[shader_id_].first->Use();
+      }
+      if (ImGui::MenuItem("Cross Section")) {
+        shader_id_ = 1;
+        gui_id_ = 1;
+        shaders_[shader_id_].first->Use();
+      }
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
+  ImGui::ColorEdit3("Color", model_color_.data());
+  ImGui::End();
+}
+
+void
+Scene::CrossSectionGui()
+{
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplSDL2_NewFrame(window_.get());
+  ImGui::NewFrame();
+
+  ImGui::Begin("Model");
+  ImGui::ColorEdit3("Color", model_color_.data());
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("Mode")) {
+      if (ImGui::MenuItem("Normal")) {
+        shader_id_ = 0;
+        gui_id_ = 0;
+        shaders_[shader_id_].first->Use();
+      }
+      if (ImGui::MenuItem("Cross Section")) {
+        shader_id_ = 1;
+        gui_id_ = 1;
+        shaders_[shader_id_].first->Use();
+      }
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
+  if (ImGui::RadioButton("X", cross_section_mode_ == 0)) {
+    cross_section_mode_ = 0;
+  }
+  ImGui::SameLine();
+  if (ImGui::RadioButton("Y", cross_section_mode_ == 1)) {
+    cross_section_mode_ = 1;
+  }
+  ImGui::SameLine();
+  if (ImGui::RadioButton("Z", cross_section_mode_ == 2)) {
+    cross_section_mode_ = 2;
+  }
+  ImGui::SliderFloat("", &cross_section_point_[cross_section_mode_], 0.0f, center_[cross_section_mode_] * 2.0f, "%.2f");
+  ImGui::End();
+}
+
+void
+Scene::ImportFonts(std::string_view dirname)
+{
+  namespace fs = std::filesystem;
+
+  if (!fs::exists(dirname) || !fs::is_directory(dirname))
+    return;
+
+  ImGuiIO& io = ImGui::GetIO();
+  for (fs::directory_entry const& entry : fs::recursive_directory_iterator(dirname)) {
+    if (!entry.is_regular_file())
+      continue;
+    std::string ext = entry.path().extension().string();
+    if (ext != ".ttf" && ext != ".otf")
+      continue;
+    io.Fonts->AddFontFromFileTTF(entry.path().c_str(), 18);
+  }
+}
+
+void
+Scene::EventHandler()
+{
+  SDL_Event event;
+  ImGuiIO& io = ImGui::GetIO();
+  while (SDL_PollEvent(&event)) {
+    ImGui_ImplSDL2_ProcessEvent(&event);
+    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
+      continue;
+    switch (event.type) {
+    case SDL_MOUSEMOTION:
+      MouseMotionControl(event.motion);
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      MouseButtonControl(event.type, event.button);
+      break;
+    case SDL_MOUSEBUTTONUP:
+      MouseButtonControl(event.type, event.button);
+      break;
+    case SDL_KEYDOWN:
+      KeyboardControl(event.type, event.key);
+      break;
+    case SDL_KEYUP:
+      KeyboardControl(event.type, event.key);
+      break;
+    case SDL_MOUSEWHEEL:
+      MouseWheelControl(event.wheel);
+      break;
+    case SDL_WINDOWEVENT:
+      switch (event.window.event) {
+      case SDL_WINDOWEVENT_RESIZED:
+        SDL_GetWindowSize(window_.get(), &width_, &height_);
+        camera_->SetAspectRatio(width_, height_);
+        break;
+      }
+      break;
+    case SDL_QUIT:
+      quit_ = true;
+      break;
+    }
+  }
 }
 
 void
@@ -222,45 +367,6 @@ Scene::Init()
   SDL_GL_MakeCurrent(window_.get(), context_);
   gladLoadGLLoader(SDL_GL_GetProcAddress);
   SDL_GL_SetSwapInterval(1);
-}
-
-void
-Scene::EventHandler()
-{
-  SDL_Event event;
-  while (SDL_PollEvent(&event)) {
-    switch (event.type) {
-    case SDL_MOUSEMOTION:
-      MouseMotionControl(event.motion);
-      break;
-    case SDL_MOUSEBUTTONDOWN:
-      MouseButtonControl(event.type, event.button);
-      break;
-    case SDL_MOUSEBUTTONUP:
-      MouseButtonControl(event.type, event.button);
-      break;
-    case SDL_KEYDOWN:
-      KeyboardControl(event.type, event.key);
-      break;
-    case SDL_KEYUP:
-      KeyboardControl(event.type, event.key);
-      break;
-    case SDL_MOUSEWHEEL:
-      MouseWheelControl(event.wheel);
-      break;
-    case SDL_WINDOWEVENT:
-      switch (event.window.event) {
-      case SDL_WINDOWEVENT_RESIZED:
-        SDL_GetWindowSize(window_.get(), &width_, &height_);
-        camera_->SetAspectRatio(width_, height_);
-        break;
-      }
-      break;
-    case SDL_QUIT:
-      quit_ = true;
-      break;
-    }
-  }
 }
 
 void

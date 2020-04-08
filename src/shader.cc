@@ -70,15 +70,21 @@ Shader::SetMatrix4(std::string_view const name, glm::mat4 const& mat)
 }
 
 void
-Shader::SetVector3(const std::string_view name, float x, float y, float z)
+Shader::SetVector3(std::string_view const name, float x, float y, float z)
 {
   glUniform3f(UniformLocation(name), x, y, z);
 };
 
 void
-Shader::SetVector3(const std::string_view name, const glm::vec3& vec)
+Shader::SetVector3(std::string_view const name, glm::vec3 const& vec)
 {
   glUniform3fv(UniformLocation(name), 1, glm::value_ptr(vec));
+}
+
+void
+Shader::SetVector3(std::string_view const name, std::array<float, 3> const& vec)
+{
+  glUniform3fv(UniformLocation(name), 1, vec.data());
 }
 
 void

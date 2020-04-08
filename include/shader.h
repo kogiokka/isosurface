@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -30,6 +31,7 @@ public:
   void SetMatrix4(std::string_view const name, glm::mat4 const& mat);
   void SetVector3(std::string_view const name, glm::vec3 const& vec);
   void SetVector3(std::string_view const name, float x, float y, float z);
+  void SetVector3(std::string_view const name, std::array<float, 3> const& vec);
 
 private:
   bool IsCompiled(GLuint const shader_object);

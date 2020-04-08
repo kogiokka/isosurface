@@ -105,6 +105,13 @@ Camera::SetCenter(float x, float y, float z)
 }
 
 void
+Camera::SetCenter(std::array<float, 3> center)
+{
+  for (auto i{ center.size() }; i-- > 0;)
+    center_[i] = center[i];
+}
+
+void
 Camera::SetPhi(float phi)
 {
   phi_ = NormRadian(phi);

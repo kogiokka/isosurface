@@ -3,3 +3,4 @@
 .kdev4
 *.kdev4
 data/
+imgui.ini
