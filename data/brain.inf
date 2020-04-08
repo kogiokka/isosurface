@@ -1,0 +1,4 @@
+resolution=256:256:220
+ratio=1:1:0.7
+sample-type=unsigned_short
+endian=little-endian

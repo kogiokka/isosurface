@@ -1,0 +1,5 @@
+Resolution=2:3:4
+VoxelSize=1.000000:1.000000:1.000000
+SampleType=UnsignedChar
+Endian=Little
+
