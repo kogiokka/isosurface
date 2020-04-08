@@ -9,7 +9,7 @@ Camera::Camera()
   , aspect_ratio_(0.f)
   , view_volume_size_(200.f)
   , move_rate_(0.4f)
-  , rotate_rate_(0.01f)
+  , rotate_rate_(0.005f)
   , zoom_(0.8f)
   , horiz_rotate_dir(1)
 {
@@ -102,13 +102,16 @@ void
 Camera::SetCenter(float x, float y, float z)
 {
   center_ = glm::vec3{ x, y, z };
+  UpdateViewCoord();
 }
 
 void
 Camera::SetCenter(std::array<float, 3> center)
 {
-  for (auto i{ center.size() }; i-- > 0;)
-    center_[i] = center[i];
+  center_.x = center[0];
+  center_.y = center[1];
+  center_.z = center[2];
+  UpdateViewCoord();
 }
 
 void

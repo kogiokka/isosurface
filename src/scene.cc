@@ -278,7 +278,7 @@ Scene::KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key)
     case SDLK_r:
       camera_.reset(new Camera());
       camera_->SetAspectRatio(AspectRatio());
-      camera_->SetCenter(center_[0], center_[1], center_[2]);
+      camera_->SetCenter(center_);
       break;
     case SDLK_q:
       if (key.keysym.mod & KMOD_CTRL)
