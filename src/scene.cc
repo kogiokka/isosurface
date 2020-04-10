@@ -19,30 +19,6 @@ Scene::Scene()
   , shaders_(0){};
 
 void
-Scene::DefaultShaderRoutine()
-{
-  auto& s = shaders_[shader_id_];
-  s->SetVector3("light_color", 1.f, 1.f, 1.f);
-  s->SetVector3("model_color", model_color_);
-  s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
-  s->SetVector3("light_src", camera_->Position());
-  s->SetVector3("view_pos", camera_->Position());
-}
-
-void
-Scene::CrossSectionShaderRoutine()
-{
-  auto& s = shaders_[shader_id_];
-  s->SetVector3("light_color", 1.f, 1.f, 1.f);
-  s->SetVector3("light_src", camera_->Position());
-  s->SetVector3("model_color", model_color_);
-  s->SetVector3("cross_section.point", cross_section_point_);
-  s->SetVector3("cross_section.normal", cross_section_dir_.at(cross_section_mode_));
-  s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
-  s->SetVector3("view_pos", camera_->Position());
-}
-
-void
 Scene::Render()
 {
   while (!quit_) {
@@ -101,11 +77,85 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
   shaders_.emplace_back(std::make_unique<Shader>());
   shaders_[1]->Attach(GL_VERTEX_SHADER, "shader/default.vert");
   shaders_[1]->Attach(GL_FRAGMENT_SHADER, "shader/cross_section.frag");
-  shader_routines_.emplace_back(std::bind(&Scene::DefaultShaderRoutine, this));
-  shader_routines_.emplace_back(std::bind(&Scene::CrossSectionShaderRoutine, this));
-
-  gui_routines_.emplace_back(std::bind(&Scene::DefaultGui, this));
-  gui_routines_.emplace_back(std::bind(&Scene::CrossSectionGui, this));
+  shader_routines_.emplace_back([this]() -> void {
+    auto& s = shaders_[shader_id_];
+    s->SetVector3("light_color", 1.f, 1.f, 1.f);
+    s->SetVector3("model_color", model_color_);
+    s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
+    s->SetVector3("light_src", camera_->Position());
+    s->SetVector3("view_pos", camera_->Position());
+  });
+  shader_routines_.emplace_back([this]() -> void {
+    auto& s = shaders_[shader_id_];
+    s->SetVector3("light_color", 1.f, 1.f, 1.f);
+    s->SetVector3("light_src", camera_->Position());
+    s->SetVector3("model_color", model_color_);
+    s->SetVector3("cross_section.point", cross_section_point_);
+    s->SetVector3("cross_section.normal", cross_section_dir_.at(cross_section_mode_));
+    s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
+    s->SetVector3("view_pos", camera_->Position());
+  });
+  gui_routines_.emplace_back([this, data]() -> void {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL2_NewFrame(window_.get());
+    ImGui::NewFrame();
+    ImGui::Begin("Model");
+    if (ImGui::BeginMainMenuBar()) {
+      if (ImGui::BeginMenu("Mode")) {
+        if (ImGui::MenuItem("Normal")) {
+          shader_id_ = 0;
+          gui_id_ = 0;
+          shaders_[shader_id_]->Use();
+        }
+        if (ImGui::MenuItem("Cross Section")) {
+          shader_id_ = 1;
+          gui_id_ = 1;
+          shaders_[shader_id_]->Use();
+        }
+        ImGui::EndMenu();
+      }
+      ImGui::EndMainMenuBar();
+    }
+    ImGui::ColorEdit3("Color", model_color_.data());
+    ImGui::End();
+  });
+  gui_routines_.emplace_back([this]() -> void {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL2_NewFrame(window_.get());
+    ImGui::NewFrame();
+    ImGui::Begin("Model");
+    ImGui::ColorEdit3("Color", model_color_.data());
+    if (ImGui::BeginMainMenuBar()) {
+      if (ImGui::BeginMenu("Mode")) {
+        if (ImGui::MenuItem("Normal")) {
+          shader_id_ = 0;
+          gui_id_ = 0;
+          shaders_[shader_id_]->Use();
+        }
+        if (ImGui::MenuItem("Cross Section")) {
+          shader_id_ = 1;
+          gui_id_ = 1;
+          shaders_[shader_id_]->Use();
+        }
+        ImGui::EndMenu();
+      }
+      ImGui::EndMainMenuBar();
+    }
+    if (ImGui::RadioButton("X", cross_section_mode_ == 0)) {
+      cross_section_mode_ = 0;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Y", cross_section_mode_ == 1)) {
+      cross_section_mode_ = 1;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Z", cross_section_mode_ == 2)) {
+      cross_section_mode_ = 2;
+    }
+    ImGui::SliderFloat(
+      "", &cross_section_point_[cross_section_mode_], 0.0f, center_[cross_section_mode_] * 2.0f, "%.2f");
+    ImGui::End();
+  });
 
   for (auto const& s : shaders_)
     s->Link();
@@ -116,73 +166,6 @@ Scene::SetupOpenGL(unsigned int count, float const* data)
 
   glEnable(GL_DEPTH_TEST);
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-}
-
-void
-Scene::DefaultGui()
-{
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplSDL2_NewFrame(window_.get());
-  ImGui::NewFrame();
-  ImGui::Begin("Model");
-  if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("Mode")) {
-      if (ImGui::MenuItem("Normal")) {
-        shader_id_ = 0;
-        gui_id_ = 0;
-        shaders_[shader_id_]->Use();
-      }
-      if (ImGui::MenuItem("Cross Section")) {
-        shader_id_ = 1;
-        gui_id_ = 1;
-        shaders_[shader_id_]->Use();
-      }
-      ImGui::EndMenu();
-    }
-    ImGui::EndMainMenuBar();
-  }
-  ImGui::ColorEdit3("Color", model_color_.data());
-  ImGui::End();
-}
-
-void
-Scene::CrossSectionGui()
-{
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplSDL2_NewFrame(window_.get());
-  ImGui::NewFrame();
-
-  ImGui::Begin("Model");
-  ImGui::ColorEdit3("Color", model_color_.data());
-  if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("Mode")) {
-      if (ImGui::MenuItem("Normal")) {
-        shader_id_ = 0;
-        gui_id_ = 0;
-        shaders_[shader_id_]->Use();
-      }
-      if (ImGui::MenuItem("Cross Section")) {
-        shader_id_ = 1;
-        gui_id_ = 1;
-        shaders_[shader_id_]->Use();
-      }
-      ImGui::EndMenu();
-    }
-    ImGui::EndMainMenuBar();
-  }
-  if (ImGui::RadioButton("X", cross_section_mode_ == 0)) {
-    cross_section_mode_ = 0;
-  }
-  ImGui::SameLine();
-  if (ImGui::RadioButton("Y", cross_section_mode_ == 1)) {
-    cross_section_mode_ = 1;
-  }
-  ImGui::SameLine();
-  if (ImGui::RadioButton("Z", cross_section_mode_ == 2)) {
-    cross_section_mode_ = 2;
-  }
-  ImGui::SliderFloat("", &cross_section_point_[cross_section_mode_], 0.0f, center_[cross_section_mode_] * 2.0f, "%.2f");
-  ImGui::End();
 }
 
 void

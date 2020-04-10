@@ -40,11 +40,7 @@ class Scene
   Scene& operator=(Scene const&) = delete;
 
 private:
-  void DefaultShaderRoutine();
-  void CrossSectionShaderRoutine();
   void ImportFonts(std::string_view dirname);
-  void DefaultGui();
-  void CrossSectionGui();
 
 public:
   Scene();

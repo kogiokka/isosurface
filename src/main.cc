@@ -6,7 +6,7 @@
 int
 main(int argc, char** argv)
 {
-  Model model("data/engine.inf", "data/engine.raw");
+  Model model("data/cthead.inf", "data/cthead.raw");
   Isosurface isosurface(model.ScalarField());
   isosurface.SetIsovalue(80.f);
   isosurface.SetModelDimensions(model.Dimension());
