@@ -10,14 +10,6 @@ uniform vec3 light_color;
 uniform vec3 view_pos;
 uniform vec3 model_color;
 
-struct CrossSection
-{
-  vec3 normal;
-  vec3 point;
-};
-
-uniform CrossSection cross_section;
-
 
 void main()
 {
