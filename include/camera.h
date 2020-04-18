@@ -2,7 +2,6 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-#include <array>
 #include <cstdio>
 #include <tuple>
 
@@ -50,7 +49,7 @@ public:
   void SetAspectRatio(float ratio);
   void SetAspectRatio(int width, int height);
   void SetCenter(float x, float y, float z);
-  void SetCenter(std::array<float, 3> center);
+  void SetCenter(glm::vec3 center);
   void SetTheta(float theta);
   void SetPhi(float phi);
   void UpdateViewCoord();

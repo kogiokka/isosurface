@@ -106,11 +106,9 @@ Camera::SetCenter(float x, float y, float z)
 }
 
 void
-Camera::SetCenter(std::array<float, 3> center)
+Camera::SetCenter(glm::vec3 center)
 {
-  center_.x = center[0];
-  center_.y = center[1];
-  center_.z = center[2];
+  center_ = center;
   UpdateViewCoord();
 }
 

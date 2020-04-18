@@ -6,15 +6,14 @@
 #include <utility>
 #include <vector>
 
-#include "glm/glm.hpp"
-
 #include "constants.h"
+#include "glm/glm.hpp"
 
 class Isosurface
 {
   unsigned int isovalue_;
-  std::array<int, 3> dimensions_;
-  std::array<float, 3> model_ratio_;
+  glm::ivec3 dimensions_;
+  glm::vec3 model_ratio_;
   std::vector<glm::vec3> gradients_;
   std::vector<float> scalar_field_;
 
@@ -35,8 +34,8 @@ public:
   Isosurface(std::vector<float> scalar_field);
   ~Isosurface();
   void SetIsovalue(float value);
-  void SetModelDimensions(std::array<int, 3> dimensions);
-  void SetModelRatio(std::array<float, 3> ratio);
+  void SetModelDimensions(glm::ivec3 dimensions);
+  void SetModelRatio(glm::vec3 ratio);
   std::pair<unsigned int, std::vector<float>> MarchingCube();
 
 private:

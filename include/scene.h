@@ -1,19 +1,23 @@
 #pragma once
 
 #include <array>
+#include <algorithm>
 #include <functional>
 #include <memory>
-#include <string_view>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include "SDL.h"
 #include "camera.h"
 #include "constants.h"
 #include "glad/glad.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl.h"
+#include "model.h"
 #include "shader.h"
 
 class Scene
@@ -24,13 +28,16 @@ class Scene
   int shader_id_;
   int gui_id_;
   int cross_section_mode_;
+  float isovalue_;
   bool quit_;
-  GLuint vbo_;
+  GLuint vao_;
   SDL_GLContext context_;
-  std::array<float, 3> center_;
-  std::array<float, 3> model_color_;
-  std::array<float, 3> cross_section_point_;
+  std::filesystem::directory_entry model_dir_;
+  glm::vec3 center_;
+  glm::vec3 model_color_;
+  glm::vec3 cross_section_point_;
   std::array<std::array<float, 3>, 3> cross_section_dir_;
+  std::unordered_map<std::string, std::unique_ptr<Model>> model_list_;
   std::unique_ptr<Camera> camera_;
   std::unique_ptr<SDL_Window, std::function<void(SDL_Window*)>> window_;
   std::vector<std::unique_ptr<Shader>> shaders_;
@@ -40,15 +47,14 @@ class Scene
   Scene& operator=(Scene const&) = delete;
 
 private:
-  void ImportFonts(std::string_view dirname);
+  void ImportFonts(std::filesystem::path dir_path);
+  void SelectModel(std::string const& name, bool force_regen);
 
 public:
   Scene();
   ~Scene();
   void Init();
-  void SetupOpenGL(unsigned int count, float const* data);
-  void SetPosition(float x, float y, float z);
-  void SetPosition(std::array<int, 3> pos);
+  void Setup();
   float AspectRatio() const;
   void Render();
   void EventHandler();

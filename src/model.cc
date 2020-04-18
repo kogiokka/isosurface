@@ -1,15 +1,16 @@
 #include "model.h"
 
-Model::Model(std::string const inf, std::string const raw)
-  : inf_file_(inf)
-  , raw_file_(raw)
+Model::Model(std::filesystem::path const inf_path, std::filesystem::path const raw_path)
+  : id_(0)
   , vertex_count_(0)
+  , inf_file_(inf_path)
+  , raw_file_(raw_path)
   , dimensions_{ 0, 0, 0 }
   , render_data_(0)
 {
   std::ifstream file(inf_file_, std::ios::binary);
   if (file.fail()) {
-    std::fprintf(stderr, "Failed to read raw file.\n");
+    std::fprintf(stderr, "Failed to read raw file: %s\n", raw_path.c_str());
     exit(EXIT_FAILURE);
   }
   std::string value;
@@ -25,17 +26,16 @@ Model::Model(std::string const inf, std::string const raw)
   std::istringstream attr_dimen(attrs.at(0));
   std::istringstream attr_ratio(attrs.at(1));
 
-  int index = 0;
+  std::vector<int> tmp_dimen;
+  std::vector<float> tmp_ratio;
   while (std::getline(attr_dimen, token, ':')) {
-    dimensions_[index] = std::stoi(token);
-    ++index;
+    tmp_dimen.emplace_back(std::stoi(token));
   }
-
-  index = 0;
   while (std::getline(attr_ratio, token, ':')) {
-    ratio_[index] = std::stof(token);
-    ++index;
+    tmp_ratio.emplace_back(std::stof(token));
   }
+  dimensions_ = { tmp_dimen[0], tmp_dimen[1], tmp_dimen[2] };
+  ratio_ = { tmp_ratio[0], tmp_ratio[1], tmp_ratio[2] };
 
   std::string type = attrs.at(2);
   if (type.back() == '\r')
@@ -71,24 +71,22 @@ Model::VertexCount() const
   return vertex_count_;
 }
 
-std::array<int, 3>
-Model::Dimension()
+void
+Model::GenIsosurface(float isovalue)
 {
-  return dimensions_;
-}
-
-std::array<float, 3>
-Model::Ratio()
-{
-  return ratio_;
+  Isosurface isosurface(ScalarField());
+  isosurface.SetIsovalue(isovalue);
+  isosurface.SetModelDimensions(dimensions_);
+  isosurface.SetModelRatio(ratio_);
+  SetRenderData(isosurface.MarchingCube());
 }
 
 std::vector<float>
 Model::ScalarField()
 {
-  assert(dimensions_[0] > 0);
-  assert(dimensions_[1] > 0);
-  assert(dimensions_[2] > 0);
+  assert(dimensions_.x > 0);
+  assert(dimensions_.y > 0);
+  assert(dimensions_.z > 0);
 
   std::ifstream file(raw_file_, std::ios::binary);
   if (file.fail()) {
@@ -116,12 +114,20 @@ Model::ScalarField()
   return field;
 }
 
-std::array<int, 3>
+glm::vec3
 Model::Center() const
 {
-  std::array<int, 3> center;
-  for (int i = 0; i < 3; ++i)
-    center[i] = dimensions_[i] * 0.5f;
+  return glm::vec3{ dimensions_ } * 0.5f;
+}
 
-  return center;
+unsigned int
+Model::Id() const
+{
+  return id_;
+}
+
+unsigned int&
+Model::Id()
+{
+  return id_;
 }

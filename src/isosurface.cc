@@ -10,9 +10,9 @@ Isosurface::~Isosurface() {}
 void
 Isosurface::CalculateGradient()
 {
-  int const xsize = dimensions_[0];
-  int const ysize = dimensions_[1];
-  int const zsize = dimensions_[2];
+  int const xsize = dimensions_.x;
+  int const ysize = dimensions_.y;
+  int const zsize = dimensions_.z;
 
   gradients_.reserve(xsize * ysize * zsize);
 
@@ -62,9 +62,9 @@ Isosurface::MarchingCube()
   std::vector<float> data;
   unsigned int vertex_count = 0;
 
-  int const& xsize = dimensions_[0];
-  int const& ysize = dimensions_[1];
-  int const& zsize = dimensions_[2];
+  int const& xsize = dimensions_.x;
+  int const& ysize = dimensions_.y;
+  int const& zsize = dimensions_.z;
 
   for (int z = 0; z < zsize - 1; ++z) {
     for (int y = 0; y < ysize - 1; ++y) {
@@ -142,8 +142,8 @@ Isosurface::InterpVertexAttribs(glm::vec3 const& v1, glm::vec3 const& v2)
 
   glm::vec3 const& g1 = Gradient(v1.x, v1.y, v1.z);
   glm::vec3 const& g2 = Gradient(v2.x, v2.y, v2.z);
-  glm::vec3 const p1{ v1.x * model_ratio_[0], v1.y * model_ratio_[1], v1.z * model_ratio_[2] };
-  glm::vec3 const p2{ v2.x * model_ratio_[0], v2.y * model_ratio_[1], v2.z * model_ratio_[2] };
+  glm::vec3 const p1{ v1.x * model_ratio_.x, v1.y * model_ratio_.y, v1.z * model_ratio_.z };
+  glm::vec3 const p2{ v2.x * model_ratio_.x, v2.y * model_ratio_.y, v2.z * model_ratio_.z };
 
   if (std::abs(value1 - value2) < min) {
     glm::vec3 const v = (p1 + p2) * 0.5f;
@@ -183,8 +183,8 @@ Isosurface::Gradient(int x, int y, int z) const
 inline int
 Isosurface::Index(int x, int y, int z) const
 {
-  int const xsize = dimensions_[0];
-  int const ysize = dimensions_[1];
+  int const xsize = dimensions_.x;
+  int const ysize = dimensions_.y;
   return x + y * xsize + z * ysize * xsize;
 }
 
@@ -213,13 +213,13 @@ Isosurface::SetIsovalue(float value)
 }
 
 void
-Isosurface::SetModelDimensions(std::array<int, 3> dimensions)
+Isosurface::SetModelDimensions(glm::ivec3 dimensions)
 {
   dimensions_ = dimensions;
 }
 
 void
-Isosurface::SetModelRatio(std::array<float, 3> ratio)
+Isosurface::SetModelRatio(glm::vec3 ratio)
 {
   model_ratio_ = ratio;
 }
