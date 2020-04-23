@@ -76,7 +76,7 @@ Scene::SelectModel(std::string const& name, bool force_regen)
   }
   auto& m = model_list_[name];
   center_ = m->Center();
-  camera_.reset(new Camera());
+  camera_ = std::make_unique<Camera>();
   camera_->SetAspectRatio(AspectRatio());
   camera_->SetCenter(center_);
 
@@ -309,7 +309,7 @@ Scene::KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key)
       camera_->Turning(Camera::Rotate::kPitchUp);
       break;
     case SDLK_r:
-      camera_.reset(new Camera());
+      camera_ = std::make_unique<Camera>();
       camera_->SetAspectRatio(AspectRatio());
       camera_->SetCenter(center_);
       break;

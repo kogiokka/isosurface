@@ -3,9 +3,9 @@
 Model::Model(std::filesystem::path const inf_path, std::filesystem::path const raw_path)
   : id_(0)
   , vertex_count_(0)
+  , dimensions_{ 0, 0, 0 }
   , inf_file_(inf_path)
   , raw_file_(raw_path)
-  , dimensions_{ 0, 0, 0 }
   , render_data_(0)
 {
   std::ifstream file(inf_file_, std::ios::binary);
