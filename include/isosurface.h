@@ -27,7 +27,7 @@ public:
   std::pair<unsigned int, std::vector<float>> MarchingCube();
 
 private:
-  std::array<float, 6> InterpVertexAttribs(glm::vec3 const& v1, glm::vec3 const& v2);
+  std::array<float, 6> InterpVertexAttribs(glm::vec3 v1, glm::vec3 v2);
   inline void CalculateGradient();
   inline float CenteredDifference(float front, float back) const;
   inline float ForwardDifference(float self, float front) const;
@@ -35,16 +35,19 @@ private:
   inline float Value(int x, int y, int z) const;
   inline float Value(glm::vec3 const& v) const;
   inline glm::vec3 const& Gradient(int x, int y, int z) const;
+  inline glm::vec3 const& Gradient(glm::vec3 const& v) const;
   inline int Index(int x, int y, int z) const;
 };
 
 class Isosurface::GridCell
 {
-  std::array<glm::vec3, 8> voxel_index_;
+  int x_;
+  int y_;
+  int z_;
 
 public:
   GridCell();
   ~GridCell();
-  void ChangeIndex(int x, int y, int z);
-  glm::vec3 const& operator[](int index) const;
+  void SetBaseIndex(int x, int y, int z);
+  glm::vec3 operator[](int index) const;
 };

@@ -62,16 +62,16 @@ Isosurface::MarchingCube()
   std::vector<float> data;
   unsigned int vertex_count = 0;
 
-  int const& xsize = dimensions_.x;
-  int const& ysize = dimensions_.y;
-  int const& zsize = dimensions_.z;
+  int const xsize = dimensions_.x;
+  int const ysize = dimensions_.y;
+  int const zsize = dimensions_.z;
   GridCell cell;
 
   for (int z = 0; z < zsize - 1; ++z) {
     for (int y = 0; y < ysize - 1; ++y) {
       for (int x = 0; x < xsize - 1; ++x) {
         unsigned short cube_index = 0;
-        cell.ChangeIndex(x, y, z);
+        cell.SetBaseIndex(x, y, z);
         if (Value(cell[0]) < isovalue_)
           cube_index |= 1;
         if (Value(cell[1]) < isovalue_)
@@ -134,17 +134,17 @@ Isosurface::MarchingCube()
 }
 
 std::array<float, 6>
-Isosurface::InterpVertexAttribs(glm::vec3 const& v1, glm::vec3 const& v2)
+Isosurface::InterpVertexAttribs(glm::vec3 v1, glm::vec3 v2)
 {
   constexpr float min = 0.0001;
-  float const value1 = Value(v1.x, v1.y, v1.z);
-  float const value2 = Value(v2.x, v2.y, v2.z);
+  float const value1 = Value(v1);
+  float const value2 = Value(v2);
   float const ratio = (isovalue_ - value1) / (value2 - value1);
 
-  glm::vec3 const& g1 = Gradient(v1.x, v1.y, v1.z);
-  glm::vec3 const& g2 = Gradient(v2.x, v2.y, v2.z);
-  glm::vec3 const p1{v1.x * model_ratio_.x, v1.y * model_ratio_.y, v1.z * model_ratio_.z};
-  glm::vec3 const p2{v2.x * model_ratio_.x, v2.y * model_ratio_.y, v2.z * model_ratio_.z};
+  glm::vec3 const& g1 = Gradient(v1);
+  glm::vec3 const& g2 = Gradient(v2);
+  glm::vec3 const p1 = v1 * model_ratio_;
+  glm::vec3 const p2 = v2 * model_ratio_;
 
   if (std::abs(value1 - value2) < min) {
     glm::vec3 const v = (p1 + p2) * 0.5f;
@@ -179,6 +179,12 @@ inline glm::vec3 const&
 Isosurface::Gradient(int x, int y, int z) const
 {
   return gradients_[Index(x, y, z)];
+}
+
+inline glm::vec3 const&
+Isosurface::Gradient(glm::vec3 const& v) const
+{
+  return Gradient(v.x, v.y, v.z);
 }
 
 inline int
@@ -226,24 +232,44 @@ Isosurface::SetModelRatio(glm::vec3 ratio)
 }
 
 Isosurface::GridCell::GridCell()
-  : voxel_index_{glm::vec3{0}} {};
+  : x_(0)
+  , y_(0)
+  , z_(0)
+{
+}
 
 Isosurface::GridCell::~GridCell(){};
 
 void
-Isosurface::GridCell::ChangeIndex(int x, int y, int z)
+Isosurface::GridCell::SetBaseIndex(int x, int y, int z)
 {
-  voxel_index_[0] = {x, y, z};
-  voxel_index_[1] = {x + 1, y, z};
-  voxel_index_[2] = {x + 1, y, z + 1};
-  voxel_index_[3] = {x, y, z + 1};
-  voxel_index_[4] = {x, y + 1, z};
-  voxel_index_[5] = {x + 1, y + 1, z};
-  voxel_index_[6] = {x + 1, y + 1, z + 1};
-  voxel_index_[7] = {x, y + 1, z + 1};
+  x_ = x;
+  y_ = y;
+  z_ = z;
 }
 
-glm::vec3 const& Isosurface::GridCell::operator[](int index) const
+glm::vec3 Isosurface::GridCell::operator[](int index) const
 {
-  return voxel_index_[index];
+  using namespace glm;
+
+  switch (index) {
+  case 0:
+    return vec3{x_, y_, z_};
+  case 1:
+    return vec3{x_ + 1, y_, z_};
+  case 2:
+    return vec3{x_ + 1, y_, z_ + 1};
+  case 3:
+    return vec3{x_, y_, z_ + 1};
+  case 4:
+    return vec3{x_, y_ + 1, z_};
+  case 5:
+    return vec3{x_ + 1, y_ + 1, z_};
+  case 6:
+    return vec3{x_ + 1, y_ + 1, z_ + 1};
+  case 7:
+    return vec3{x_, y_ + 1, z_ + 1};
+  }
+  fprintf(stderr, "In Isosurface::GridCell: Wrong index.");
+  return vec3{-1, -1, -1};
 }
