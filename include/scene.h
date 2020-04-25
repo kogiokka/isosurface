@@ -1,7 +1,7 @@
 #pragma once
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <memory>
 #include <tuple>

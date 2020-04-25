@@ -16,19 +16,7 @@ class Isosurface
   glm::vec3 model_ratio_;
   std::vector<glm::vec3> gradients_;
   std::vector<float> scalar_field_;
-
-  class GridCell
-  {
-    int x_;
-    int y_;
-    int z_;
-    std::array<glm::vec3, 8> voxel_index_;
-
-  public:
-    GridCell(int x, int y, int z);
-    ~GridCell();
-    glm::vec3 const& operator[](int index) const;
-  };
+  class GridCell;
 
 public:
   Isosurface(std::vector<float> scalar_field);
@@ -48,4 +36,15 @@ private:
   inline float Value(glm::vec3 const& v) const;
   inline glm::vec3 const& Gradient(int x, int y, int z) const;
   inline int Index(int x, int y, int z) const;
+};
+
+class Isosurface::GridCell
+{
+  std::array<glm::vec3, 8> voxel_index_;
+
+public:
+  GridCell();
+  ~GridCell();
+  void ChangeIndex(int x, int y, int z);
+  glm::vec3 const& operator[](int index) const;
 };

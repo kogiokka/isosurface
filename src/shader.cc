@@ -33,7 +33,7 @@ Shader::Attach(GLenum shader_type, std::string_view const filepath)
   file.read(source.data(), source.size());
   file.close();
 
-  char const* const shader_source_array[1] = { source.c_str() };
+  char const* const shader_source_array[1] = {source.c_str()};
 
   GLuint shader_object = glCreateShader(shader_type);
   glShaderSource(shader_object, 1, shader_source_array, nullptr);

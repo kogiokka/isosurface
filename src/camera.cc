@@ -1,8 +1,8 @@
 #include "camera.h"
 
 Camera::Camera()
-  : world_up_{ 0.f, 1.f, 0.f }
-  , center_{ 0.f, 0.f, 0.f }
+  : world_up_{0.f, 1.f, 0.f}
+  , center_{0.f, 0.f, 0.f}
   , theta_(0.3f)
   , phi_(1.4f)
   , radius_(600.f)
@@ -28,7 +28,7 @@ Camera::CartesianCoord(float theta, float phi) const
   float const sin_t = sinf(theta);
   float const cos_t = cosf(theta);
 
-  return glm::vec3{ sin_p * cos_t, cos_p, sin_p * sin_t };
+  return glm::vec3{sin_p * cos_t, cos_p, sin_p * sin_t};
 }
 
 void
@@ -101,7 +101,7 @@ Camera::SetAspectRatio(int width, int height)
 void
 Camera::SetCenter(float x, float y, float z)
 {
-  center_ = glm::vec3{ x, y, z };
+  center_ = glm::vec3{x, y, z};
   UpdateViewCoord();
 }
 

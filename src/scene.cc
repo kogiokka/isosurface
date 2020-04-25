@@ -14,10 +14,10 @@ Scene::Scene()
   , vao_(0)
   , context_(nullptr)
   , model_dir_("models/default")
-  , center_{ 0.f, 0.f, 0.f }
-  , model_color_{ 0.f, 0.5f, 1.f }
-  , cross_section_point_{ 0.f, 0.f, 0.f }
-  , cross_section_dir_{ { { 1.f, 0.f, 0.f }, { 0.f, 1.f, 0.f }, { 0.f, 0.f, 1.f } } }
+  , center_{0.f, 0.f, 0.f}
+  , model_color_{0.f, 0.5f, 1.f}
+  , cross_section_point_{0.f, 0.f, 0.f}
+  , cross_section_dir_{{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}}}
   , model_list_{}
   , camera_(std::make_unique<Camera>())
   , window_(nullptr, SDL_DestroyWindow)
@@ -72,7 +72,6 @@ Scene::SelectModel(std::string const& name, bool force_regen)
     glCreateBuffers(1, &m->Id());
     glNamedBufferStorage(m->Id(), 2 * vertex_count_ * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
     glNamedBufferSubData(m->Id(), 0, 2 * vertex_count_ * sizeof(float), m->RenderData());
-    glBindBuffer(GL_ARRAY_BUFFER, m->Id());
   }
   auto& m = model_list_[name];
   center_ = m->Center();

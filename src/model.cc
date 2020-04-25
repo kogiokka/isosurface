@@ -3,7 +3,7 @@
 Model::Model(std::filesystem::path const inf_path, std::filesystem::path const raw_path)
   : id_(0)
   , vertex_count_(0)
-  , dimensions_{ 0, 0, 0 }
+  , dimensions_{0, 0, 0}
   , inf_file_(inf_path)
   , raw_file_(raw_path)
   , render_data_(0)
@@ -34,8 +34,8 @@ Model::Model(std::filesystem::path const inf_path, std::filesystem::path const r
   while (std::getline(attr_ratio, token, ':')) {
     tmp_ratio.emplace_back(std::stof(token));
   }
-  dimensions_ = { tmp_dimen[0], tmp_dimen[1], tmp_dimen[2] };
-  ratio_ = { tmp_ratio[0], tmp_ratio[1], tmp_ratio[2] };
+  dimensions_ = {tmp_dimen[0], tmp_dimen[1], tmp_dimen[2]};
+  ratio_ = {tmp_ratio[0], tmp_ratio[1], tmp_ratio[2]};
 
   std::string type = attrs.at(2);
   if (type.back() == '\r')
@@ -117,7 +117,7 @@ Model::ScalarField()
 glm::vec3
 Model::Center() const
 {
-  return glm::vec3{ dimensions_ } * 0.5f;
+  return glm::vec3{dimensions_} * 0.5f;
 }
 
 unsigned int
