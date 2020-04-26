@@ -22,6 +22,7 @@
 //  Only override if your GL version doesn't handle this GLSL version. See GLSL version table at the top of imgui_impl_opengl3.cpp.
 
 #pragma once
+#include "imgui.h"      // IMGUI_IMPL_API
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD 1
 
 // Backend API
