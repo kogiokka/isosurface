@@ -27,21 +27,21 @@ Isosurface::CalculateGradient()
         } else if (x == xsize - 1) {
           x_diff = BackwardDifference(Value(x, y, z), Value(x - 1, y, z));
         } else {
-          x_diff = CenteredDifference(Value(x - 1, y, z), Value(x + 1, y, z));
+          x_diff = CentralDifference(Value(x - 1, y, z), Value(x + 1, y, z));
         }
         if (y == 0) {
           y_diff = ForwardDifference(Value(x, 0, z), Value(x, 1, z));
         } else if (y == ysize - 1) {
           y_diff = BackwardDifference(Value(x, y, z), Value(x, y - 1, z));
         } else {
-          y_diff = CenteredDifference(Value(x, y - 1, z), Value(x, y + 1, z));
+          y_diff = CentralDifference(Value(x, y - 1, z), Value(x, y + 1, z));
         }
         if (z == 0) {
           z_diff = ForwardDifference(Value(x, y, 0), Value(x, y, 1));
         } else if (z == zsize - 1) {
           z_diff = BackwardDifference(Value(x, y, z), Value(x, y, z - 1));
         } else {
-          z_diff = CenteredDifference(Value(x, y, z - 1), Value(x, y, z + 1));
+          z_diff = CentralDifference(Value(x, y, z - 1), Value(x, y, z + 1));
         }
 
         if (x_diff == 0 && y_diff == 0 && z_diff == 0) {
@@ -196,7 +196,7 @@ Isosurface::Index(int x, int y, int z) const
 }
 
 inline float
-Isosurface::CenteredDifference(float front, float back) const
+Isosurface::CentralDifference(float front, float back) const
 {
   return (back - front) / 2;
 }
@@ -204,7 +204,7 @@ Isosurface::CenteredDifference(float front, float back) const
 inline float
 Isosurface::BackwardDifference(float self, float back) const
 {
-  return back - self;
+  return self - back;
 }
 
 inline float

@@ -29,7 +29,7 @@ public:
 private:
   std::array<float, 6> InterpVertexAttribs(glm::vec3 v1, glm::vec3 v2);
   inline void CalculateGradient();
-  inline float CenteredDifference(float front, float back) const;
+  inline float CentralDifference(float front, float back) const;
   inline float ForwardDifference(float self, float front) const;
   inline float BackwardDifference(float self, float back) const;
   inline float Value(int x, int y, int z) const;

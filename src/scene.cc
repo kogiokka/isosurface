@@ -248,14 +248,10 @@ Scene::EventHandler()
       MouseMotionControl(event.motion);
       break;
     case SDL_MOUSEBUTTONDOWN:
-      MouseButtonControl(event.type, event.button);
-      break;
     case SDL_MOUSEBUTTONUP:
       MouseButtonControl(event.type, event.button);
       break;
     case SDL_KEYDOWN:
-      KeyboardControl(event.type, event.key);
-      break;
     case SDL_KEYUP:
       KeyboardControl(event.type, event.key);
       break;
@@ -375,7 +371,7 @@ float
 Scene::AspectRatio() const
 {
   return static_cast<float>(width_) / static_cast<float>(height_);
-};
+}
 
 void
 Scene::Init()
