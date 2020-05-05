@@ -50,6 +50,14 @@ private:
   void ImportFonts(std::filesystem::path dir_path);
   void SelectModel(std::string const& name, bool force_regen);
 
+private:
+  void MouseButtonUp(SDL_MouseButtonEvent const& button_up);
+  void MouseButtonDown(SDL_MouseButtonEvent const& button_down);
+  void MouseWheel(SDL_MouseWheelEvent const& wheel);
+  void MouseMotion(SDL_MouseMotionEvent const& motion);
+  void KeyDown(SDL_KeyboardEvent const& keydown);
+  void KeyUp(SDL_KeyboardEvent const& keyup);
+
 public:
   Scene();
   ~Scene();
@@ -58,8 +66,4 @@ public:
   float AspectRatio() const;
   void Render();
   void EventHandler();
-  void KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key);
-  void MouseButtonControl(Uint32 type, SDL_MouseButtonEvent const& button);
-  void MouseMotionControl(SDL_MouseMotionEvent const& motion);
-  void MouseWheelControl(SDL_MouseWheelEvent const& wheel);
 };

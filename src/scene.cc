@@ -245,18 +245,22 @@ Scene::EventHandler()
       continue;
     switch (event.type) {
     case SDL_MOUSEMOTION:
-      MouseMotionControl(event.motion);
+      MouseMotion(event.motion);
       break;
     case SDL_MOUSEBUTTONDOWN:
+      MouseButtonDown(event.button);
+      break;
     case SDL_MOUSEBUTTONUP:
-      MouseButtonControl(event.type, event.button);
+      MouseButtonUp(event.button);
       break;
     case SDL_KEYDOWN:
+      KeyDown(event.key);
+      break;
     case SDL_KEYUP:
-      KeyboardControl(event.type, event.key);
+      KeyUp(event.key);
       break;
     case SDL_MOUSEWHEEL:
-      MouseWheelControl(event.wheel);
+      MouseWheel(event.wheel);
       break;
     case SDL_WINDOWEVENT:
       switch (event.window.event) {
@@ -274,88 +278,76 @@ Scene::EventHandler()
 }
 
 void
-Scene::KeyboardControl(Uint32 type, SDL_KeyboardEvent const& key)
+Scene::KeyDown(SDL_KeyboardEvent const& keydown)
 {
-  switch (type) {
-  case SDL_KEYDOWN:
-    switch (key.keysym.sym) {
-    case SDLK_w:
-      camera_->Moving(Camera::Translate::kUp);
-      break;
-    case SDLK_s:
-      camera_->Moving(Camera::Translate::kDown);
-      break;
-    case SDLK_a:
-      camera_->Moving(Camera::Translate::kLeft);
-      break;
-    case SDLK_d:
-      camera_->Moving(Camera::Translate::kRight);
-      break;
-    case SDLK_RIGHT:
-      camera_->Turning(Camera::Rotate::kClockwise);
-      break;
-    case SDLK_LEFT:
-      camera_->Turning(Camera::Rotate::kCounterClockwise);
-      break;
-    case SDLK_UP:
-      camera_->Turning(Camera::Rotate::kPitchDown);
-      break;
-    case SDLK_DOWN:
-      camera_->Turning(Camera::Rotate::kPitchUp);
-      break;
-    case SDLK_r:
-      camera_ = std::make_unique<Camera>();
-      camera_->SetAspectRatio(AspectRatio());
-      camera_->SetCenter(center_);
-      break;
-    case SDLK_q:
-      if (key.keysym.mod & KMOD_CTRL)
-        quit_ = true;
-      break;
-    }
+  switch (keydown.keysym.sym) {
+  case SDLK_w:
+    camera_->Moving(Camera::Translate::kUp);
     break;
-  case SDL_KEYUP:
-    switch (key.keysym.sym) {
-    case SDLK_ESCAPE:
-      break;
-    }
+  case SDLK_s:
+    camera_->Moving(Camera::Translate::kDown);
+    break;
+  case SDLK_a:
+    camera_->Moving(Camera::Translate::kLeft);
+    break;
+  case SDLK_d:
+    camera_->Moving(Camera::Translate::kRight);
+    break;
+  case SDLK_RIGHT:
+    camera_->Turning(Camera::Rotate::kClockwise);
+    break;
+  case SDLK_LEFT:
+    camera_->Turning(Camera::Rotate::kCounterClockwise);
+    break;
+  case SDLK_UP:
+    camera_->Turning(Camera::Rotate::kPitchDown);
+    break;
+  case SDLK_DOWN:
+    camera_->Turning(Camera::Rotate::kPitchUp);
+    break;
+  case SDLK_r:
+    camera_ = std::make_unique<Camera>();
+    camera_->SetAspectRatio(AspectRatio());
+    camera_->SetCenter(center_);
+    break;
+  case SDLK_q:
+    if (keydown.keysym.mod & KMOD_CTRL)
+      quit_ = true;
     break;
   }
 }
 
 void
-Scene::MouseButtonControl(Uint32 type, const SDL_MouseButtonEvent& button)
+Scene::KeyUp(SDL_KeyboardEvent const& key)
 {
-  switch (type) {
-  case SDL_MOUSEBUTTONDOWN:
-    switch (button.button) {
-    case SDL_BUTTON_LEFT:
-      camera_->InitDragTranslation(button.x, button.y);
-      break;
-    case SDL_BUTTON_RIGHT:
-      camera_->InitDragRotation(button.x, button.y);
-      break;
-    }
+}
+
+void
+Scene::MouseButtonDown(SDL_MouseButtonEvent const& button)
+{
+  switch (button.button) {
+  case SDL_BUTTON_LEFT:
+    camera_->InitDragTranslation(button.x, button.y);
     break;
-  case SDL_MOUSEBUTTONUP:
-    switch (button.button) {
-    case SDL_BUTTON_LEFT:
-      break;
-    case SDL_BUTTON_RIGHT:
-      break;
-    }
+  case SDL_BUTTON_RIGHT:
+    camera_->InitDragRotation(button.x, button.y);
     break;
   }
 }
 
 void
-Scene::MouseWheelControl(const SDL_MouseWheelEvent& wheel)
+Scene::MouseButtonUp(SDL_MouseButtonEvent const& button)
+{
+}
+
+void
+Scene::MouseWheel(SDL_MouseWheelEvent const& wheel)
 {
   camera_->WheelZoom(-wheel.y);
 }
 
 void
-Scene::MouseMotionControl(SDL_MouseMotionEvent const& motion)
+Scene::MouseMotion(SDL_MouseMotionEvent const& motion)
 {
   switch (motion.state) {
   case SDL_BUTTON_LMASK:
