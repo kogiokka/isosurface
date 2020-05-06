@@ -67,63 +67,55 @@ Isosurface::MarchingCube()
   int const zsize = dimensions_.z;
   GridCell cell;
 
+  constexpr std::array<short, 8> cmp_results{1, 2, 4, 8, 16, 32, 64, 128};
+
   for (int z = 0; z < zsize - 1; ++z) {
     for (int y = 0; y < ysize - 1; ++y) {
       for (int x = 0; x < xsize - 1; ++x) {
-        unsigned short cube_index = 0;
-        cell.SetBaseIndex(x, y, z);
-        if (Value(cell[0]) < isovalue_)
-          cube_index |= 1;
-        if (Value(cell[1]) < isovalue_)
-          cube_index |= 2;
-        if (Value(cell[2]) < isovalue_)
-          cube_index |= 4;
-        if (Value(cell[3]) < isovalue_)
-          cube_index |= 8;
-        if (Value(cell[4]) < isovalue_)
-          cube_index |= 16;
-        if (Value(cell[5]) < isovalue_)
-          cube_index |= 32;
-        if (Value(cell[6]) < isovalue_)
-          cube_index |= 64;
-        if (Value(cell[7]) < isovalue_)
-          cube_index |= 128;
 
-        if (table::kEdgeTable[cube_index] == 0)
+        unsigned short vertex_cmp_result = 0;
+        cell.SetBaseIndex(x, y, z);
+
+        for (int i = 0; i <= 7; ++i) {
+          if (Value(cell[i]) < isovalue_)
+            vertex_cmp_result |= cmp_results[i];
+        }
+
+        auto const intersected_edges = table::kEdgeTable[vertex_cmp_result];
+
+        if (intersected_edges == 0)
           continue;
 
-        std::array<std::array<float, 6>, 12> vert_attribs;
-        if (table::kEdgeTable[cube_index] & 1)
-          vert_attribs[0] = InterpVertexAttribs(cell[0], cell[1]);
-        if (table::kEdgeTable[cube_index] & 2)
-          vert_attribs[1] = InterpVertexAttribs(cell[1], cell[2]);
-        if (table::kEdgeTable[cube_index] & 4)
-          vert_attribs[2] = InterpVertexAttribs(cell[2], cell[3]);
-        if (table::kEdgeTable[cube_index] & 8)
-          vert_attribs[3] = InterpVertexAttribs(cell[3], cell[0]);
-        if (table::kEdgeTable[cube_index] & 16)
-          vert_attribs[4] = InterpVertexAttribs(cell[4], cell[5]);
-        if (table::kEdgeTable[cube_index] & 32)
-          vert_attribs[5] = InterpVertexAttribs(cell[5], cell[6]);
-        if (table::kEdgeTable[cube_index] & 64)
-          vert_attribs[6] = InterpVertexAttribs(cell[6], cell[7]);
-        if (table::kEdgeTable[cube_index] & 128)
-          vert_attribs[7] = InterpVertexAttribs(cell[7], cell[4]);
-        if (table::kEdgeTable[cube_index] & 256)
-          vert_attribs[8] = InterpVertexAttribs(cell[0], cell[4]);
-        if (table::kEdgeTable[cube_index] & 512)
-          vert_attribs[9] = InterpVertexAttribs(cell[1], cell[5]);
-        if (table::kEdgeTable[cube_index] & 1024)
-          vert_attribs[10] = InterpVertexAttribs(cell[2], cell[6]);
-        if (table::kEdgeTable[cube_index] & 2048)
-          vert_attribs[11] = InterpVertexAttribs(cell[3], cell[7]);
+        std::array<std::array<float, 6>, 12> edge_list;
+        if (intersected_edges & 1)
+          edge_list[0] = InterpVertexAttribs(cell[0], cell[1]);
+        if (intersected_edges & 2)
+          edge_list[1] = InterpVertexAttribs(cell[1], cell[2]);
+        if (intersected_edges & 4)
+          edge_list[2] = InterpVertexAttribs(cell[2], cell[3]);
+        if (intersected_edges & 8)
+          edge_list[3] = InterpVertexAttribs(cell[3], cell[0]);
+        if (intersected_edges & 16)
+          edge_list[4] = InterpVertexAttribs(cell[4], cell[5]);
+        if (intersected_edges & 32)
+          edge_list[5] = InterpVertexAttribs(cell[5], cell[6]);
+        if (intersected_edges & 64)
+          edge_list[6] = InterpVertexAttribs(cell[6], cell[7]);
+        if (intersected_edges & 128)
+          edge_list[7] = InterpVertexAttribs(cell[7], cell[4]);
+        if (intersected_edges & 256)
+          edge_list[8] = InterpVertexAttribs(cell[0], cell[4]);
+        if (intersected_edges & 512)
+          edge_list[9] = InterpVertexAttribs(cell[1], cell[5]);
+        if (intersected_edges & 1024)
+          edge_list[10] = InterpVertexAttribs(cell[2], cell[6]);
+        if (intersected_edges & 2048)
+          edge_list[11] = InterpVertexAttribs(cell[3], cell[7]);
 
-        for (int i = 0; table::kTriTable[cube_index][i] != -1; ++i) {
-          auto const& tri_list = table::kTriTable[cube_index];
-          std::array<float, 6> const& attrbs = vert_attribs[tri_list[i]];
-          for (auto const& a : attrbs) {
-            data.push_back(a);
-          }
+        for (int i = 0; table::kTriTable[vertex_cmp_result][i] != -1; ++i) {
+          auto const edge_index = table::kTriTable[vertex_cmp_result][i];
+          std::array<float, 6> const& attrbs = edge_list[edge_index];
+          data.insert(data.end(), attrbs.begin(), attrbs.end());
           vertex_count += 3;
         }
       }
