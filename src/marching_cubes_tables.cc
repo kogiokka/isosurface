@@ -1,8 +1,8 @@
-#include "constants.h"
+#include "marching_cubes_tables.h"
 
-namespace table
+namespace cube
 {
-std::array<short, 256> const kEdgeTable{
+constexpr std::array<short, 256> kCubeEdges{
   0b0000'0000'0000, 0b0001'0000'1001, 0b0010'0000'0011, 0b0011'0000'1010, 0b0100'0000'0110, 0b0101'0000'1111,
   0b0110'0000'0101, 0b0111'0000'1100, 0b1000'0000'1100, 0b1001'0000'0101, 0b1010'0000'1111, 0b1011'0000'0110,
   0b1100'0000'1010, 0b1101'0000'0011, 0b1110'0000'1001, 0b1111'0000'0000, 0b0001'1001'0000, 0b0000'1001'1001,
@@ -48,7 +48,7 @@ std::array<short, 256> const kEdgeTable{
   0b0011'0000'1010, 0b0010'0000'0011, 0b0001'0000'1001, 0b0000'0000'0000,
 };
 
-std::array<std::array<short, 16>, 256> const kTriTable{
+constexpr std::array<std::array<short, 16>, 256> kCubeTriangles{
   {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
    {0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
    {0, 1, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},

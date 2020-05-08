@@ -78,7 +78,8 @@ Model::GenIsosurface(float isovalue)
   isosurface.SetIsovalue(isovalue);
   isosurface.SetModelDimensions(dimensions_);
   isosurface.SetModelRatio(ratio_);
-  SetRenderData(isosurface.MarchingCube());
+  // SetRenderData(isosurface.MarchingCubes());
+  SetRenderData(isosurface.MarchingTetrahedra());
 }
 
 std::vector<float>

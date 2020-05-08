@@ -5,8 +5,11 @@
 #include <cassert>
 #include <utility>
 #include <vector>
+#include <bitset>
+#include <iostream>
 
-#include "constants.h"
+#include "marching_cubes_tables.h"
+#include "marching_tetrahedra_tables.h"
 #include "glm/glm.hpp"
 
 class Isosurface
@@ -24,19 +27,21 @@ public:
   void SetIsovalue(float value);
   void SetModelDimensions(glm::ivec3 dimensions);
   void SetModelRatio(glm::vec3 ratio);
-  std::pair<unsigned int, std::vector<float>> MarchingCube();
+  std::pair<unsigned int, std::vector<float>> MarchingCubes();
+  std::pair<unsigned int, std::vector<float>> MarchingTetrahedra();
 
 private:
-  std::array<float, 6> InterpVertexAttribs(glm::vec3 v1, glm::vec3 v2);
-  inline void CalculateGradient();
-  inline float CentralDifference(float front, float back) const;
-  inline float ForwardDifference(float self, float front) const;
-  inline float BackwardDifference(float self, float back) const;
-  inline float Value(int x, int y, int z) const;
-  inline float Value(glm::vec3 const& v) const;
-  inline glm::vec3 const& Gradient(int x, int y, int z) const;
-  inline glm::vec3 const& Gradient(glm::vec3 const& v) const;
-  inline int Index(int x, int y, int z) const;
+  void CalculateGradient();
+  std::array<short, 6> TetrahedraStatus(short cube_status) const;
+  std::array<float, 6> InterpVertexAttribs(glm::vec3 v1, glm::vec3 v2) const;
+  float CentralDifference(float front, float back) const;
+  float ForwardDifference(float self, float front) const;
+  float BackwardDifference(float self, float back) const;
+  float Value(int x, int y, int z) const;
+  float Value(glm::vec3 const& v) const;
+  int Index(int x, int y, int z) const;
+  glm::vec3 const& Gradient(int x, int y, int z) const;
+  glm::vec3 const& Gradient(glm::vec3 const& v) const;
 };
 
 class Isosurface::GridCell

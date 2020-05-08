@@ -55,7 +55,7 @@ Isosurface::CalculateGradient()
 }
 
 std::pair<unsigned int, std::vector<float>>
-Isosurface::MarchingCube()
+Isosurface::MarchingTetrahedra()
 {
   CalculateGradient();
 
@@ -67,55 +67,135 @@ Isosurface::MarchingCube()
   int const zsize = dimensions_.z;
   GridCell cell;
 
-  constexpr std::array<short, 8> cmp_results{1, 2, 4, 8, 16, 32, 64, 128};
+  for (int z = 0; z < zsize - 1; ++z) {
+    for (int y = 0; y < ysize - 1; ++y) {
+      for (int x = 0; x < xsize - 1; ++x) {
+        cell.SetBaseIndex(x, y, z);
+
+        unsigned short cube_status = 0;
+
+        for (int i = 0; i < 8; ++i) {
+          if (Value(cell[i]) < isovalue_)
+            cube_status |= (1 << i);
+        }
+
+        std::array<short, 6> const status = TetrahedraStatus(cube_status);
+
+        // 6 tetrahedra
+        for (int tetra_id = 0; tetra_id < 6; ++tetra_id) {
+
+          short intersected_edges = tetr::kTetrahedraEdges[status[tetra_id]];
+
+          if (intersected_edges == 0)
+            continue;
+
+          std::array<std::array<float, 6>, 6> vertex_on_edge;
+          std::array<short, 4> const tetr_cell = tetr::kTetrahedraVertices[tetra_id];
+          if (intersected_edges & 1)
+            vertex_on_edge[0] = InterpVertexAttribs(cell[tetr_cell[0]], cell[tetr_cell[1]]);
+          if (intersected_edges & 2)
+            vertex_on_edge[1] = InterpVertexAttribs(cell[tetr_cell[1]], cell[tetr_cell[2]]);
+          if (intersected_edges & 4)
+            vertex_on_edge[2] = InterpVertexAttribs(cell[tetr_cell[2]], cell[tetr_cell[0]]);
+          if (intersected_edges & 8)
+            vertex_on_edge[3] = InterpVertexAttribs(cell[tetr_cell[0]], cell[tetr_cell[3]]);
+          if (intersected_edges & 16)
+            vertex_on_edge[4] = InterpVertexAttribs(cell[tetr_cell[1]], cell[tetr_cell[3]]);
+          if (intersected_edges & 32)
+            vertex_on_edge[5] = InterpVertexAttribs(cell[tetr_cell[2]], cell[tetr_cell[3]]);
+
+          for (int i = 0; tetr::kTetrahedraTriangles[status[tetra_id]][i] != -1; ++i) {
+            auto const edge_id = tetr::kTetrahedraTriangles[status[tetra_id]][i];
+            data.insert(data.end(), vertex_on_edge[edge_id].begin(), vertex_on_edge[edge_id].end());
+            vertex_count += 3;
+          }
+        }
+      }
+    }
+  }
+
+  return std::make_pair(vertex_count, data);
+}
+
+std::array<short int, 6>
+Isosurface::TetrahedraStatus(short int cube_status) const
+{
+  std::array<short, 6> status;
+  for (int tetra_id = 0; tetra_id < 6; ++tetra_id) {
+    short result_byte = tetr::kTetrahedraVertexBytes[tetra_id] & cube_status;
+    status[tetra_id] = 0b0000;
+
+    for (int vert_id = 0; vert_id < 4; ++vert_id) {
+      short test_bit = 1 << tetr::kTetrahedraVertices[tetra_id][vert_id];
+      short true_bit = static_cast<short>((test_bit & result_byte) != 0);
+      status[tetra_id] |= (true_bit << vert_id);
+    }
+  }
+
+  return status;
+}
+
+// "status" is a bitwise representation of the comparison between the isovalue
+// and the function values of the vertices.
+std::pair<unsigned int, std::vector<float>>
+Isosurface::MarchingCubes()
+{
+  CalculateGradient();
+
+  std::vector<float> data;
+  unsigned int vertex_count = 0;
+
+  int const xsize = dimensions_.x;
+  int const ysize = dimensions_.y;
+  int const zsize = dimensions_.z;
+  GridCell cell;
 
   for (int z = 0; z < zsize - 1; ++z) {
     for (int y = 0; y < ysize - 1; ++y) {
       for (int x = 0; x < xsize - 1; ++x) {
-
-        unsigned short vertex_cmp_result = 0;
         cell.SetBaseIndex(x, y, z);
+
+        unsigned short status = 0;
 
         for (int i = 0; i <= 7; ++i) {
           if (Value(cell[i]) < isovalue_)
-            vertex_cmp_result |= cmp_results[i];
+            status |= (1 << i);
         }
 
-        auto const intersected_edges = table::kEdgeTable[vertex_cmp_result];
+        auto const intersected_edges = cube::kCubeEdges[status];
 
         if (intersected_edges == 0)
           continue;
 
-        std::array<std::array<float, 6>, 12> edge_list;
+        std::array<std::array<float, 6>, 12> vertex_on_edge;
         if (intersected_edges & 1)
-          edge_list[0] = InterpVertexAttribs(cell[0], cell[1]);
+          vertex_on_edge[0] = InterpVertexAttribs(cell[0], cell[1]);
         if (intersected_edges & 2)
-          edge_list[1] = InterpVertexAttribs(cell[1], cell[2]);
+          vertex_on_edge[1] = InterpVertexAttribs(cell[1], cell[2]);
         if (intersected_edges & 4)
-          edge_list[2] = InterpVertexAttribs(cell[2], cell[3]);
+          vertex_on_edge[2] = InterpVertexAttribs(cell[2], cell[3]);
         if (intersected_edges & 8)
-          edge_list[3] = InterpVertexAttribs(cell[3], cell[0]);
+          vertex_on_edge[3] = InterpVertexAttribs(cell[3], cell[0]);
         if (intersected_edges & 16)
-          edge_list[4] = InterpVertexAttribs(cell[4], cell[5]);
+          vertex_on_edge[4] = InterpVertexAttribs(cell[4], cell[5]);
         if (intersected_edges & 32)
-          edge_list[5] = InterpVertexAttribs(cell[5], cell[6]);
+          vertex_on_edge[5] = InterpVertexAttribs(cell[5], cell[6]);
         if (intersected_edges & 64)
-          edge_list[6] = InterpVertexAttribs(cell[6], cell[7]);
+          vertex_on_edge[6] = InterpVertexAttribs(cell[6], cell[7]);
         if (intersected_edges & 128)
-          edge_list[7] = InterpVertexAttribs(cell[7], cell[4]);
+          vertex_on_edge[7] = InterpVertexAttribs(cell[7], cell[4]);
         if (intersected_edges & 256)
-          edge_list[8] = InterpVertexAttribs(cell[0], cell[4]);
+          vertex_on_edge[8] = InterpVertexAttribs(cell[0], cell[4]);
         if (intersected_edges & 512)
-          edge_list[9] = InterpVertexAttribs(cell[1], cell[5]);
+          vertex_on_edge[9] = InterpVertexAttribs(cell[1], cell[5]);
         if (intersected_edges & 1024)
-          edge_list[10] = InterpVertexAttribs(cell[2], cell[6]);
+          vertex_on_edge[10] = InterpVertexAttribs(cell[2], cell[6]);
         if (intersected_edges & 2048)
-          edge_list[11] = InterpVertexAttribs(cell[3], cell[7]);
+          vertex_on_edge[11] = InterpVertexAttribs(cell[3], cell[7]);
 
-        for (int i = 0; table::kTriTable[vertex_cmp_result][i] != -1; ++i) {
-          auto const edge_index = table::kTriTable[vertex_cmp_result][i];
-          std::array<float, 6> const& attrbs = edge_list[edge_index];
-          data.insert(data.end(), attrbs.begin(), attrbs.end());
+        for (int i = 0; cube::kCubeTriangles[status][i] != -1; ++i) {
+          auto const edge_id = cube::kCubeTriangles[status][i];
+          data.insert(data.end(), vertex_on_edge[edge_id].begin(), vertex_on_edge[edge_id].end());
           vertex_count += 3;
         }
       }
@@ -126,7 +206,7 @@ Isosurface::MarchingCube()
 }
 
 std::array<float, 6>
-Isosurface::InterpVertexAttribs(glm::vec3 v1, glm::vec3 v2)
+Isosurface::InterpVertexAttribs(glm::vec3 v1, glm::vec3 v2) const
 {
   constexpr float min = 0.0001;
   float const value1 = Value(v1);
