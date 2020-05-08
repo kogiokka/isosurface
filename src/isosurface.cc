@@ -57,7 +57,8 @@ Isosurface::CalculateGradient()
 std::pair<unsigned int, std::vector<float>>
 Isosurface::MarchingTetrahedra()
 {
-  CalculateGradient();
+  if (gradients_.empty())
+    CalculateGradient();
 
   std::vector<float> data;
   unsigned int vertex_count = 0;
@@ -140,7 +141,8 @@ Isosurface::TetrahedraStatus(short int cube_status) const
 std::pair<unsigned int, std::vector<float>>
 Isosurface::MarchingCubes()
 {
-  CalculateGradient();
+  if (gradients_.empty())
+    CalculateGradient();
 
   std::vector<float> data;
   unsigned int vertex_count = 0;

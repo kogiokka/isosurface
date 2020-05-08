@@ -31,9 +31,9 @@ public:
   std::pair<unsigned int, std::vector<float>> MarchingTetrahedra();
 
 private:
-  void CalculateGradient();
   std::array<short, 6> TetrahedraStatus(short cube_status) const;
   std::array<float, 6> InterpVertexAttribs(glm::vec3 v1, glm::vec3 v2) const;
+  void CalculateGradient();
   float CentralDifference(float front, float back) const;
   float ForwardDifference(float self, float front) const;
   float BackwardDifference(float self, float back) const;
