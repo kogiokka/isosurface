@@ -36,7 +36,7 @@ public:
   float const* RenderData() const;
   unsigned int VertexCount() const;
   void SetRenderData(std::pair<unsigned int, std::vector<float>> data);
-  void GenIsosurface(float isovalue);
+  void GenIsosurface(float isovalue, int method);
   unsigned int& Id();
   unsigned int Id() const;
 };

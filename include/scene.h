@@ -47,7 +47,7 @@ class Scene
 
 private:
   void ImportFonts(std::filesystem::path dir_path);
-  void SelectModel(std::string const& name, bool force_regen);
+  void GenIsosurface(std::string const& name, bool force_regen, int method);
 
 private:
   void MouseButtonUp(SDL_MouseButtonEvent const& button_up);

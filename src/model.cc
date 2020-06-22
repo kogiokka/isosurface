@@ -72,14 +72,20 @@ Model::VertexCount() const
 }
 
 void
-Model::GenIsosurface(float isovalue)
+Model::GenIsosurface(float isovalue, int method)
 {
   Isosurface isosurface(ScalarField());
   isosurface.SetIsovalue(isovalue);
   isosurface.SetModelDimensions(dimensions_);
   isosurface.SetModelRatio(ratio_);
-  // SetRenderData(isosurface.MarchingCubes());
-  SetRenderData(isosurface.MarchingTetrahedra());
+  switch (method) {
+  case 1:
+    SetRenderData(isosurface.MarchingTetrahedra());
+    break;
+  default:
+    SetRenderData(isosurface.MarchingCubes());
+    break;
+  }
 }
 
 std::vector<float>

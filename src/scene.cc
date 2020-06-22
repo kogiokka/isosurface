@@ -49,7 +49,7 @@ Scene::Render()
 }
 
 void
-Scene::SelectModel(std::string const& name, bool force_regen)
+Scene::GenIsosurface(std::string const& name, bool force_regen, int method)
 {
   bool const kExist = (model_list_.find(name) != model_list_.end());
 
@@ -66,7 +66,7 @@ Scene::SelectModel(std::string const& name, bool force_regen)
     model_list_.emplace(name, std::make_unique<Model>(inf_path, raw_path));
 
     auto& m = model_list_[name];
-    m->GenIsosurface(isovalue_);
+    m->GenIsosurface(isovalue_, method);
     vertex_count_ = m->VertexCount();
 
     glCreateBuffers(1, &m->Id());
@@ -153,6 +153,7 @@ Scene::Setup()
     // ImGui::ShowDemoWindow();
     static int curr = -1;
     static int next = 0;
+    static int method = 0;
     if (ImGui::BeginCombo("Select Model", default_models[next].data())) {
       for (int i = 0; i < default_models.size(); ++i) {
         if (ImGui::Selectable(default_models[i].c_str(), i == next)) {
@@ -161,13 +162,27 @@ Scene::Setup()
       }
       ImGui::EndCombo();
     }
-    if (ImGui::Button("Select")) {
-      SelectModel(default_models[next], false);
+    if (ImGui::Button("Marching Cube")) {
+      if (method != 0) {
+        method = 0;
+        GenIsosurface(default_models[next], true, method);
+      } else {
+        GenIsosurface(default_models[next], false, method);
+      }
+      curr = next;
+    }
+    if (ImGui::Button("Marching Tethrahedra")) {
+      if (method != 1) {
+        method = 1;
+        GenIsosurface(default_models[next], true, method);
+      } else {
+        GenIsosurface(default_models[next], false, method);
+      }
       curr = next;
     }
     if (ImGui::SliderFloat("Isovalue", &isovalue_, 0.0f, 2000.f)) {
       if (curr >= 0)
-        SelectModel(default_models[curr], true);
+        GenIsosurface(default_models[curr], true, method);
     }
     ImGui::ColorEdit3("Color", glm::value_ptr(model_color_));
     ImGui::End();
