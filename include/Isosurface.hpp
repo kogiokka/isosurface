@@ -26,8 +26,8 @@ public:
   Isosurface(std::vector<float> scalar_field);
   ~Isosurface();
   void SetIsovalue(float value);
-  void SetModelDimensions(glm::ivec3 dimensions);
-  void SetModelRatio(glm::vec3 ratio);
+  void SetResolution(glm::ivec3 dimensions);
+  void SetRatio(glm::vec3 ratio);
   std::pair<unsigned int, std::vector<float>> MarchingCubes();
   std::pair<unsigned int, std::vector<float>> MarchingTetrahedra();
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Camera.hpp"
-#include "Model.hpp"
 #include "SDLOpenGLWindow.hpp"
 #include "Shader.hpp"
+#include "Model.hpp"
 
 #include "glad/glad.h"
 #include "glm/glm.hpp"
@@ -28,6 +28,7 @@ class MainWindow : public SDLOpenGLWindow
   int cross_section_mode_;
   float isovalue_;
   GLuint vao_;
+  GLuint vbo_;
   std::filesystem::directory_entry model_dir_;
   glm::vec3 center_;
   glm::vec3 model_color_;

@@ -210,18 +210,16 @@ MainWindow::GenIsosurface(std::string const& name, int method)
 {
   if (model_ != nullptr) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDeleteBuffers(1, &model_->Id());
+    glDeleteBuffers(1, &vbo_);
   }
 
   fs::path infPath = model_dir_.path() / (name + ".inf");
-  fs::path rawPath = model_dir_.path() / (name + ".raw");
-  model_ = std::make_unique<Model>(infPath, rawPath);
+  model_ = std::make_unique<Model>(infPath);
   model_->GenIsosurface(isovalue_, method);
   vertexCount_ = model_->VertexCount();
 
-  glCreateBuffers(1, &model_->Id());
-  glNamedBufferStorage(model_->Id(), 2 * vertexCount_ * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
-  glNamedBufferSubData(model_->Id(), 0, 2 * vertexCount_ * sizeof(float), model_->RenderData());
+  glCreateBuffers(1, &vbo_);
+  glNamedBufferStorage(vbo_, 2 * vertexCount_ * sizeof(float), model_->RenderData(), GL_DYNAMIC_STORAGE_BIT);
   center_ = model_->Center();
   camera_ = std::make_unique<Camera>();
   camera_->SetAspectRatio(width_, height_);
@@ -229,8 +227,8 @@ MainWindow::GenIsosurface(std::string const& name, int method)
 
   unsigned int stride = 3 * sizeof(float);
   // Interleaved data
-  glVertexArrayVertexBuffer(vao_, 0, model_->Id(), 0, stride * 2);
-  glVertexArrayVertexBuffer(vao_, 1, model_->Id(), stride, stride * 2);
+  glVertexArrayVertexBuffer(vao_, 0, vbo_, 0, stride * 2);
+  glVertexArrayVertexBuffer(vao_, 1, vbo_, stride, stride * 2);
 }
 
 void

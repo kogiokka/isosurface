@@ -294,13 +294,13 @@ Isosurface::SetIsovalue(float value)
 }
 
 void
-Isosurface::SetModelDimensions(glm::ivec3 dimensions)
+Isosurface::SetResolution(glm::ivec3 dimensions)
 {
   dimensions_ = dimensions;
 }
 
 void
-Isosurface::SetModelRatio(glm::vec3 ratio)
+Isosurface::SetRatio(glm::vec3 ratio)
 {
   model_ratio_ = ratio;
 }
