@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <array>
-#include <functional>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -23,9 +22,9 @@
 
 class MainWindow : public SDLOpenGLWindow
 {
-  int vertex_count_;
-  int shader_id_;
-  int gui_id_;
+  int vertexCount_;
+  int shaderId_;
+  int guiMode_;
   int cross_section_mode_;
   float isovalue_;
   GLuint vao_;
@@ -34,17 +33,16 @@ class MainWindow : public SDLOpenGLWindow
   glm::vec3 model_color_;
   glm::vec3 cross_section_point_;
   std::array<std::array<float, 3>, 3> cross_section_dir_;
-  std::unordered_map<std::string, std::unique_ptr<Model>> model_list_;
+  std::unique_ptr<Model> model_;
   std::unique_ptr<Camera> camera_;
   std::vector<std::unique_ptr<Shader>> shaders_;
-  std::vector<std::function<void(void)>> shader_routines_;
-  std::vector<std::function<void(void)>> gui_routines_;
+  std::vector<std::string> modelNames_;
   MainWindow(MainWindow const&) = delete;
   MainWindow& operator=(MainWindow const&) = delete;
 
 private:
   void ImportFonts(std::filesystem::path dir_path);
-  void GenIsosurface(std::string const& name, bool force_regen, int method);
+  void GenIsosurface(std::string const& name, int method);
 
 private:
   virtual void InitializeGL() override;

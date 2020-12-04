@@ -1,12 +1,15 @@
 #include "MainWindow.hpp"
 
+#include <cstddef>
+
+using std::size_t;
 namespace fs = std::filesystem;
 
 MainWindow::MainWindow(std::string const& name, int width, int height)
   : SDLOpenGLWindow(name, width, height)
-  , vertex_count_(0)
-  , shader_id_(0)
-  , gui_id_(0)
+  , vertexCount_(0)
+  , shaderId_(0)
+  , guiMode_(0)
   , cross_section_mode_(0)
   , isovalue_(80.f)
   , vao_(0)
@@ -15,7 +18,7 @@ MainWindow::MainWindow(std::string const& name, int width, int height)
   , model_color_{0.f, 0.5f, 1.f}
   , cross_section_point_{0.f, 0.f, 0.f}
   , cross_section_dir_{{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}}}
-  , model_list_{}
+  , model_(nullptr)
   , camera_(std::make_unique<Camera>())
   , shaders_(0)
 {
@@ -47,14 +50,16 @@ MainWindow::InitializeGL()
   ImGui::CreateContext();
   ImGui_ImplOpenGL3_Init();
   ImGui_ImplSDL2_InitForOpenGL(window_, glContext_);
+  ImGuiStyle& style = ImGui::GetStyle();
+  style.FrameRounding = 3.0f;
+  style.FrameBorderSize = 1.0f;
   ImportFonts("res/fonts");
 
-  std::vector<std::string> default_models;
-  for (fs::path const& kEntry : fs::recursive_directory_iterator(model_dir_)) {
-    if (kEntry.extension().string() == ".raw")
-      default_models.push_back(kEntry.stem());
+  for (fs::path const& entry : fs::recursive_directory_iterator(model_dir_)) {
+    if (entry.extension().string() == ".raw")
+      modelNames_.push_back(entry.stem());
   }
-  std::sort(default_models.begin(), default_models.end());
+  std::sort(modelNames_.begin(), modelNames_.end());
 
   glCreateVertexArrays(1, &vao_);
   glBindVertexArray(vao_);
@@ -69,93 +74,87 @@ MainWindow::InitializeGL()
   shaders_.emplace_back(std::make_unique<Shader>());
   shaders_[1]->Attach(GL_VERTEX_SHADER, "shader/default.vert");
   shaders_[1]->Attach(GL_FRAGMENT_SHADER, "shader/cross_section.frag");
-  shader_routines_.emplace_back([this]() -> void {
-    auto& s = shaders_[shader_id_];
-    s->SetVector3("light_color", 1.f, 1.f, 1.f);
-    s->SetVector3("model_color", model_color_);
-    s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
-    s->SetVector3("light_src", camera_->Position());
-    s->SetVector3("view_pos", camera_->Position());
-  });
-  shader_routines_.emplace_back([this]() -> void {
-    auto& s = shaders_[shader_id_];
-    s->SetVector3("light_color", 1.f, 1.f, 1.f);
-    s->SetVector3("light_src", camera_->Position());
-    s->SetVector3("model_color", model_color_);
-    s->SetVector3("cross_section.point", cross_section_point_);
-    s->SetVector3("cross_section.normal", cross_section_dir_.at(cross_section_mode_));
-    s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
-    s->SetVector3("view_pos", camera_->Position());
-  });
-  gui_routines_.emplace_back([this, default_models]() -> void {
+
+  for (auto const& shader : shaders_)
+    shader->Link();
+
+  shaders_[shaderId_]->Use();
+  camera_->SetAspectRatio(width_, height_);
+
+  glEnable(GL_DEPTH_TEST);
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+}
+
+void
+MainWindow::PaintGL()
+{
+  glViewport(0, 0, width_, height_);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplSDL2_NewFrame(window_);
+  ImGui::NewFrame();
+
+  switch (guiMode_) {
+  case 0: {
     ImGui::Begin("Model");
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("Mode")) {
         if (ImGui::MenuItem("Normal")) {
-          shader_id_ = 0;
-          gui_id_ = 0;
-          shaders_[shader_id_]->Use();
+          shaderId_ = 0;
+          guiMode_ = 0;
+          shaders_[shaderId_]->Use();
         }
         if (ImGui::MenuItem("Cross Section")) {
-          shader_id_ = 1;
-          gui_id_ = 1;
-          shaders_[shader_id_]->Use();
+          shaderId_ = 1;
+          guiMode_ = 1;
+          shaders_[shaderId_]->Use();
         }
         ImGui::EndMenu();
       }
       ImGui::EndMainMenuBar();
     }
-    // ImGui::ShowDemoWindow();
-    static int curr = -1;
-    static int next = 0;
+
+    static size_t curr = 0;
     static int method = 0;
-    if (ImGui::BeginCombo("Select Model", default_models[next].data())) {
-      for (int i = 0; i < default_models.size(); ++i) {
-        if (ImGui::Selectable(default_models[i].c_str(), i == next)) {
-          next = i;
+
+    if (ImGui::BeginCombo("Select Model", modelNames_[curr].data())) {
+      for (size_t i = 0; i < modelNames_.size(); ++i) {
+        if (ImGui::Selectable(modelNames_[i].c_str(), i == curr)) {
+          curr = i;
         }
       }
       ImGui::EndCombo();
     }
-    if (ImGui::Button("Marching Cube")) {
-      if (method != 0) {
-        method = 0;
-        GenIsosurface(default_models[next], true, method);
-      } else {
-        GenIsosurface(default_models[next], false, method);
-      }
-      curr = next;
+    if (ImGui::RadioButton("Marching Cube", method == 0)) {
+      method = 0;
     }
-    if (ImGui::Button("Marching Tethrahedra")) {
-      if (method != 1) {
-        method = 1;
-        GenIsosurface(default_models[next], true, method);
-      } else {
-        GenIsosurface(default_models[next], false, method);
-      }
-      curr = next;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Marching Tetrahera", method == 1)) {
+      method = 1;
     }
-    if (ImGui::SliderFloat("Isovalue", &isovalue_, 0.0f, 2000.f)) {
-      if (curr >= 0)
-        GenIsosurface(default_models[curr], true, method);
+    ImGui::SliderFloat("Isovalue", &isovalue_, 0.f, 2000.f);
+    if (ImGui::Button("Generate")) {
+      GenIsosurface(modelNames_.at(curr), method);
     }
     ImGui::ColorEdit3("Color", glm::value_ptr(model_color_));
     ImGui::End();
-  });
-  gui_routines_.emplace_back([this]() -> void {
+  } break;
+  case 1: {
     ImGui::Begin("Model");
     ImGui::ColorEdit3("Color", glm::value_ptr(model_color_));
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("Mode")) {
         if (ImGui::MenuItem("Normal")) {
-          shader_id_ = 0;
-          gui_id_ = 0;
-          shaders_[shader_id_]->Use();
+          shaderId_ = 0;
+          guiMode_ = 0;
+          shaders_[shaderId_]->Use();
         }
         if (ImGui::MenuItem("Cross Section")) {
-          shader_id_ = 1;
-          gui_id_ = 1;
-          shaders_[shader_id_]->Use();
+          shaderId_ = 1;
+          guiMode_ = 1;
+          shaders_[shaderId_]->Use();
         }
         ImGui::EndMenu();
       }
@@ -175,74 +174,63 @@ MainWindow::InitializeGL()
     ImGui::SliderFloat(
       "", &cross_section_point_[cross_section_mode_], 0.0f, center_[cross_section_mode_] * 2.0f, "%.2f");
     ImGui::End();
-  });
+  } break;
+  }
 
-  for (auto const& kS : shaders_)
-    kS->Link();
+  // Run shader routine after GenModelIsosurface updating the camera.
+  switch (shaderId_) {
+  case 0: {
+    auto& s = shaders_[shaderId_];
+    s->SetVector3("light_color", 1.f, 1.f, 1.f);
+    s->SetVector3("model_color", model_color_);
+    s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
+    s->SetVector3("light_src", camera_->Position());
+    s->SetVector3("view_pos", camera_->Position());
+  } break;
+  case 1: {
+    auto& s = shaders_[shaderId_];
+    s->SetVector3("light_color", 1.f, 1.f, 1.f);
+    s->SetVector3("light_src", camera_->Position());
+    s->SetVector3("model_color", model_color_);
+    s->SetVector3("cross_section.point", cross_section_point_);
+    s->SetVector3("cross_section.normal", cross_section_dir_.at(cross_section_mode_));
+    s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
+    s->SetVector3("view_pos", camera_->Position());
+  } break;
+  }
 
-  shaders_[shader_id_]->Use();
-  camera_->SetAspectRatio(width_, height_);
-
-  glEnable(GL_DEPTH_TEST);
-  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-}
-
-void
-MainWindow::PaintGL()
-{
-  glViewport(0, 0, width_, height_);
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplSDL2_NewFrame(window_);
-  ImGui::NewFrame();
-
-  gui_routines_[gui_id_]();
-
-  shader_routines_[shader_id_](); // Run shader routine after GenModelIsosurface updating the camera.
-
-  glDrawArrays(GL_TRIANGLES, 0, vertex_count_);
+  glDrawArrays(GL_TRIANGLES, 0, vertexCount_);
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   SDL_GL_SwapWindow(window_);
 }
 
 void
-MainWindow::GenIsosurface(std::string const& name, bool force_regen, int method)
+MainWindow::GenIsosurface(std::string const& name, int method)
 {
-  bool const kExist = (model_list_.find(name) != model_list_.end());
-
-  if (force_regen) {
-    assert(kExist);
-
+  if (model_ != nullptr) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDeleteBuffers(1, &model_list_[name]->Id());
-    model_list_.erase(name);
+    glDeleteBuffers(1, &model_->Id());
   }
-  if (!kExist || force_regen) {
-    fs::path inf_path = model_dir_.path() / (name + ".inf");
-    fs::path raw_path = model_dir_.path() / (name + ".raw");
-    model_list_.emplace(name, std::make_unique<Model>(inf_path, raw_path));
 
-    auto& m = model_list_[name];
-    m->GenIsosurface(isovalue_, method);
-    vertex_count_ = m->VertexCount();
+  fs::path infPath = model_dir_.path() / (name + ".inf");
+  fs::path rawPath = model_dir_.path() / (name + ".raw");
+  model_ = std::make_unique<Model>(infPath, rawPath);
+  model_->GenIsosurface(isovalue_, method);
+  vertexCount_ = model_->VertexCount();
 
-    glCreateBuffers(1, &m->Id());
-    glNamedBufferStorage(m->Id(), 2 * vertex_count_ * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
-    glNamedBufferSubData(m->Id(), 0, 2 * vertex_count_ * sizeof(float), m->RenderData());
-  }
-  auto& m = model_list_[name];
-  center_ = m->Center();
+  glCreateBuffers(1, &model_->Id());
+  glNamedBufferStorage(model_->Id(), 2 * vertexCount_ * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
+  glNamedBufferSubData(model_->Id(), 0, 2 * vertexCount_ * sizeof(float), model_->RenderData());
+  center_ = model_->Center();
   camera_ = std::make_unique<Camera>();
   camera_->SetAspectRatio(width_, height_);
   camera_->SetCenter(center_);
 
   unsigned int stride = 3 * sizeof(float);
   // Interleaved data
-  glVertexArrayVertexBuffer(vao_, 0, m->Id(), 0, stride * 2);
-  glVertexArrayVertexBuffer(vao_, 1, m->Id(), stride, stride * 2);
+  glVertexArrayVertexBuffer(vao_, 0, model_->Id(), 0, stride * 2);
+  glVertexArrayVertexBuffer(vao_, 1, model_->Id(), stride, stride * 2);
 }
 
 void
@@ -252,13 +240,13 @@ MainWindow::ImportFonts(std::filesystem::path dir_path)
     return;
 
   ImGuiIO& io = ImGui::GetIO();
-  for (fs::directory_entry const& kEntry : fs::recursive_directory_iterator(dir_path)) {
-    if (!kEntry.is_regular_file())
+  for (fs::directory_entry const& entry : fs::recursive_directory_iterator(dir_path)) {
+    if (!entry.is_regular_file())
       continue;
-    auto const& ext = kEntry.path().extension().string();
+    auto const& ext = entry.path().extension().string();
     if (ext != ".ttf" && ext != ".otf")
       continue;
-    io.Fonts->AddFontFromFileTTF(kEntry.path().c_str(), 18);
+    io.Fonts->AddFontFromFileTTF(entry.path().c_str(), 18);
   }
 }
 
