@@ -1,13 +1,11 @@
-#include "scene.h"
+#include "MainWindow.hpp"
 #include <iostream>
 
 int
 main()
 {
-  Scene scene;
-  scene.Init();
-  scene.Setup();
-  scene.Render();
+  MainWindow app("Isosurface", 800, 800);
+  app.Show();
 
   return 0;
 }

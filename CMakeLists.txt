@@ -15,9 +15,9 @@ if (SDL2_FOUND)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic")
-    set(CMAKE_CXX_FLAGS_DEBUG "-ggdb -D_GLIBCXX_DEBUG")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb -D_GLIBCXX_DEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 endif()
 
 include_directories(include/)
@@ -37,6 +37,7 @@ add_subdirectory(ext/imgui)
 
 file(GLOB sourceFiles CONFIGURE_DEPENDS
     src/*.cc
+    src/*.cpp
 )
 
 add_executable(${PROJECT_NAME}

@@ -1,18 +1,15 @@
-#include "scene.h"
+#include "MainWindow.hpp"
 
 namespace fs = std::filesystem;
 
-Scene::Scene()
-  : width_(800)
-  , height_(600)
+MainWindow::MainWindow(std::string const& name, int width, int height)
+  : SDLOpenGLWindow(name, width, height)
   , vertex_count_(0)
   , shader_id_(0)
   , gui_id_(0)
   , cross_section_mode_(0)
   , isovalue_(80.f)
-  , quit_(false)
   , vao_(0)
-  , context_(nullptr)
   , model_dir_("models/default")
   , center_{0.f, 0.f, 0.f}
   , model_color_{0.f, 0.5f, 1.f}
@@ -20,80 +17,36 @@ Scene::Scene()
   , cross_section_dir_{{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}}}
   , model_list_{}
   , camera_(std::make_unique<Camera>())
-  , window_(nullptr, SDL_DestroyWindow)
   , shaders_(0)
 {
 }
 
-void
-Scene::Render()
-{
-  while (!quit_) {
-    EventHandler();
-    glViewport(0, 0, width_, height_);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame(window_.get());
-    ImGui::NewFrame();
-
-    gui_routines_[gui_id_]();
-
-    shader_routines_[shader_id_](); // Run shader routine after GenModelIsosurface updating the camera.
-
-    glDrawArrays(GL_TRIANGLES, 0, vertex_count_);
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    SDL_GL_SwapWindow(window_.get());
-  }
-}
+MainWindow::~MainWindow() {}
 
 void
-Scene::GenIsosurface(std::string const& name, bool force_regen, int method)
+MainWindow::InitializeGL()
 {
-  bool const kExist = (model_list_.find(name) != model_list_.end());
+#ifndef NDEBUG
+  glDebugMessageCallback(
+    []([[maybe_unused]] GLenum source,
+       [[maybe_unused]] GLenum type,
+       [[maybe_unused]] GLuint id,
+       [[maybe_unused]] GLenum severity,
+       [[maybe_unused]] GLsizei length,
+       [[maybe_unused]] GLchar const* message,
+       [[maybe_unused]] void const* user_param) noexcept {
+      fprintf(stderr, "TYPE:%x, Severity:%x MSG: %s.\n", type, severity, message);
+    },
+    nullptr);
+  glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+  glEnable(GL_DEBUG_OUTPUT);
+  glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
 
-  if (force_regen) {
-    assert(kExist);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDeleteBuffers(1, &model_list_[name]->Id());
-    model_list_.erase(name);
-  }
-  if (!kExist || force_regen) {
-    fs::path inf_path = model_dir_.path() / (name + ".inf");
-    fs::path raw_path = model_dir_.path() / (name + ".raw");
-    model_list_.emplace(name, std::make_unique<Model>(inf_path, raw_path));
-
-    auto& m = model_list_[name];
-    m->GenIsosurface(isovalue_, method);
-    vertex_count_ = m->VertexCount();
-
-    glCreateBuffers(1, &m->Id());
-    glNamedBufferStorage(m->Id(), 2 * vertex_count_ * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
-    glNamedBufferSubData(m->Id(), 0, 2 * vertex_count_ * sizeof(float), m->RenderData());
-  }
-  auto& m = model_list_[name];
-  center_ = m->Center();
-  camera_ = std::make_unique<Camera>();
-  camera_->SetAspectRatio(AspectRatio());
-  camera_->SetCenter(center_);
-
-  unsigned int stride = 3 * sizeof(float);
-  // Interleaved data
-  glVertexArrayVertexBuffer(vao_, 0, m->Id(), 0, stride * 2);
-  glVertexArrayVertexBuffer(vao_, 1, m->Id(), stride, stride * 2);
-}
-
-void
-Scene::Setup()
-{
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGui_ImplOpenGL3_Init();
-  ImGui_ImplSDL2_InitForOpenGL(window_.get(), context_);
+  ImGui_ImplSDL2_InitForOpenGL(window_, glContext_);
   ImportFonts("res/fonts");
 
   std::vector<std::string> default_models;
@@ -228,14 +181,72 @@ Scene::Setup()
     kS->Link();
 
   shaders_[shader_id_]->Use();
-  camera_->SetAspectRatio(AspectRatio());
+  camera_->SetAspectRatio(width_, height_);
 
   glEnable(GL_DEPTH_TEST);
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void
-Scene::ImportFonts(std::filesystem::path dir_path)
+MainWindow::PaintGL()
+{
+  glViewport(0, 0, width_, height_);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplSDL2_NewFrame(window_);
+  ImGui::NewFrame();
+
+  gui_routines_[gui_id_]();
+
+  shader_routines_[shader_id_](); // Run shader routine after GenModelIsosurface updating the camera.
+
+  glDrawArrays(GL_TRIANGLES, 0, vertex_count_);
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  SDL_GL_SwapWindow(window_);
+}
+
+void
+MainWindow::GenIsosurface(std::string const& name, bool force_regen, int method)
+{
+  bool const kExist = (model_list_.find(name) != model_list_.end());
+
+  if (force_regen) {
+    assert(kExist);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDeleteBuffers(1, &model_list_[name]->Id());
+    model_list_.erase(name);
+  }
+  if (!kExist || force_regen) {
+    fs::path inf_path = model_dir_.path() / (name + ".inf");
+    fs::path raw_path = model_dir_.path() / (name + ".raw");
+    model_list_.emplace(name, std::make_unique<Model>(inf_path, raw_path));
+
+    auto& m = model_list_[name];
+    m->GenIsosurface(isovalue_, method);
+    vertex_count_ = m->VertexCount();
+
+    glCreateBuffers(1, &m->Id());
+    glNamedBufferStorage(m->Id(), 2 * vertex_count_ * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
+    glNamedBufferSubData(m->Id(), 0, 2 * vertex_count_ * sizeof(float), m->RenderData());
+  }
+  auto& m = model_list_[name];
+  center_ = m->Center();
+  camera_ = std::make_unique<Camera>();
+  camera_->SetAspectRatio(width_, height_);
+  camera_->SetCenter(center_);
+
+  unsigned int stride = 3 * sizeof(float);
+  // Interleaved data
+  glVertexArrayVertexBuffer(vao_, 0, m->Id(), 0, stride * 2);
+  glVertexArrayVertexBuffer(vao_, 1, m->Id(), stride, stride * 2);
+}
+
+void
+MainWindow::ImportFonts(std::filesystem::path dir_path)
 {
   if (!fs::exists(dir_path) || !fs::is_directory(dir_path))
     return;
@@ -252,50 +263,25 @@ Scene::ImportFonts(std::filesystem::path dir_path)
 }
 
 void
-Scene::EventHandler()
+MainWindow::OnProcessEvent(const SDL_Event& event)
 {
-  SDL_Event event;
-  ImGuiIO& io = ImGui::GetIO();
-  while (SDL_PollEvent(&event)) {
-    ImGui_ImplSDL2_ProcessEvent(&event);
-    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
-      continue;
-    switch (event.type) {
-    case SDL_MOUSEMOTION:
-      MouseMotion(event.motion);
-      break;
-    case SDL_MOUSEBUTTONDOWN:
-      MouseButtonDown(event.button);
-      break;
-    case SDL_MOUSEBUTTONUP:
-      MouseButtonUp(event.button);
-      break;
-    case SDL_KEYDOWN:
-      KeyDown(event.key);
-      break;
-    case SDL_KEYUP:
-      KeyUp(event.key);
-      break;
-    case SDL_MOUSEWHEEL:
-      MouseWheel(event.wheel);
-      break;
-    case SDL_WINDOWEVENT:
-      switch (event.window.event) {
-      case SDL_WINDOWEVENT_RESIZED:
-        SDL_GetWindowSize(window_.get(), &width_, &height_);
-        camera_->SetAspectRatio(width_, height_);
-        break;
-      }
-      break;
-    case SDL_QUIT:
-      quit_ = true;
-      break;
-    }
+  ImGui_ImplSDL2_ProcessEvent(&event);
+  auto const& io = ImGui::GetIO();
+  if (io.WantCaptureMouse || io.WantCaptureKeyboard) {
+    shallSkipSDLEvent_ = true;
+    return;
   }
+  shallSkipSDLEvent_ = false;
 }
 
 void
-Scene::KeyDown(SDL_KeyboardEvent const& keydown)
+MainWindow::OnWindowResized()
+{
+  camera_->SetAspectRatio(width_, height_);
+}
+
+void
+MainWindow::OnKeyDown(SDL_KeyboardEvent const& keydown)
 {
   switch (keydown.keysym.sym) {
   case SDLK_w:
@@ -324,47 +310,38 @@ Scene::KeyDown(SDL_KeyboardEvent const& keydown)
     break;
   case SDLK_r:
     camera_ = std::make_unique<Camera>();
-    camera_->SetAspectRatio(AspectRatio());
+    camera_->SetAspectRatio(width_, height_);
     camera_->SetCenter(center_);
     break;
   case SDLK_q:
-    if (keydown.keysym.mod & KMOD_CTRL)
-      quit_ = true;
+    if (keydown.keysym.mod & KMOD_CTRL) {
+      isAlive_ = false;
+    }
     break;
   }
 }
 
 void
-Scene::KeyUp(SDL_KeyboardEvent const&)
+MainWindow::OnMouseButtonDown(SDL_MouseButtonEvent const& buttonDown)
 {
-}
-
-void
-Scene::MouseButtonDown(SDL_MouseButtonEvent const& button)
-{
-  switch (button.button) {
+  switch (buttonDown.button) {
   case SDL_BUTTON_LEFT:
-    camera_->InitDragTranslation(button.x, button.y);
+    camera_->InitDragTranslation(buttonDown.x, buttonDown.y);
     break;
   case SDL_BUTTON_RIGHT:
-    camera_->InitDragRotation(button.x, button.y);
+    camera_->InitDragRotation(buttonDown.x, buttonDown.y);
     break;
   }
 }
 
 void
-Scene::MouseButtonUp(SDL_MouseButtonEvent const&)
-{
-}
-
-void
-Scene::MouseWheel(SDL_MouseWheelEvent const& wheel)
+MainWindow::OnMouseWheel(SDL_MouseWheelEvent const& wheel)
 {
   camera_->WheelZoom(-wheel.y);
 }
 
 void
-Scene::MouseMotion(SDL_MouseMotionEvent const& motion)
+MainWindow::OnMouseMotion(SDL_MouseMotionEvent const& motion)
 {
   switch (motion.state) {
   case SDL_BUTTON_LMASK:
@@ -375,39 +352,3 @@ Scene::MouseMotion(SDL_MouseMotionEvent const& motion)
     break;
   }
 }
-
-float
-Scene::AspectRatio() const
-{
-  return static_cast<float>(width_) / static_cast<float>(height_);
-}
-
-void
-Scene::Init()
-{
-  SDL_Init(SDL_INIT_VIDEO);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
-  SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-
-  Uint32 window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-  window_.reset(
-    SDL_CreateWindow("Isosurface", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width_, height_, window_flags));
-  SDL_SetWindowMinimumSize(window_.get(), 400, 300);
-
-  context_ = SDL_GL_CreateContext(window_.get());
-  SDL_GL_MakeCurrent(window_.get(), context_);
-  gladLoadGLLoader(SDL_GL_GetProcAddress);
-  SDL_GL_SetSwapInterval(1);
-}
-
-Scene::~Scene()
-{
-  SDL_GL_DeleteContext(context_);
-  SDL_Quit();
-};
