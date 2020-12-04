@@ -312,7 +312,7 @@ Isosurface::GridCell::GridCell()
 {
 }
 
-Isosurface::GridCell::~GridCell(){};
+Isosurface::GridCell::~GridCell() {}
 
 void
 Isosurface::GridCell::SetBaseIndex(int x, int y, int z)
@@ -322,7 +322,8 @@ Isosurface::GridCell::SetBaseIndex(int x, int y, int z)
   z_ = z;
 }
 
-glm::vec3 Isosurface::GridCell::operator[](int index) const
+glm::vec3
+Isosurface::GridCell::operator[](int index) const
 {
   using namespace glm;
 

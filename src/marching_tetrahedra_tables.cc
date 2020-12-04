@@ -74,4 +74,4 @@ constexpr std::array<std::array<short, 7>, 16> kTetrahedraTriangles{{
   {3, 2, 0, -1, -1, -1, -1},    // 1110
   {-1, -1, -1, -1, -1, -1, -1}, // 1111
 }};
-}
+} // namespace tetr

@@ -48,9 +48,9 @@ Model::Model(std::filesystem::path const inf_path, std::filesystem::path const r
     std::fprintf(stderr, "Unknown model data type: %s\n", type.c_str());
     exit(EXIT_FAILURE);
   }
-};
+}
 
-Model::~Model(){};
+Model::~Model() {}
 
 void
 Model::SetRenderData(std::pair<unsigned int, std::vector<float>> data)

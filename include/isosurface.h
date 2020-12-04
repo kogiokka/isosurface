@@ -2,15 +2,15 @@
 
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <cassert>
+#include <iostream>
 #include <utility>
 #include <vector>
-#include <bitset>
-#include <iostream>
 
+#include "glm/glm.hpp"
 #include "marching_cubes_tables.h"
 #include "marching_tetrahedra_tables.h"
-#include "glm/glm.hpp"
 
 class Isosurface
 {

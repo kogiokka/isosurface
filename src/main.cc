@@ -2,7 +2,7 @@
 #include <iostream>
 
 int
-main(int argc, char** argv)
+main()
 {
   Scene scene;
   scene.Init();

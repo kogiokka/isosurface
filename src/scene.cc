@@ -21,7 +21,9 @@ Scene::Scene()
   , model_list_{}
   , camera_(std::make_unique<Camera>())
   , window_(nullptr, SDL_DestroyWindow)
-  , shaders_(0){};
+  , shaders_(0)
+{
+}
 
 void
 Scene::Render()
@@ -333,7 +335,7 @@ Scene::KeyDown(SDL_KeyboardEvent const& keydown)
 }
 
 void
-Scene::KeyUp(SDL_KeyboardEvent const& key)
+Scene::KeyUp(SDL_KeyboardEvent const&)
 {
 }
 
@@ -351,7 +353,7 @@ Scene::MouseButtonDown(SDL_MouseButtonEvent const& button)
 }
 
 void
-Scene::MouseButtonUp(SDL_MouseButtonEvent const& button)
+Scene::MouseButtonUp(SDL_MouseButtonEvent const&)
 {
 }
 

@@ -73,7 +73,7 @@ void
 Shader::SetVector3(std::string_view const name, float x, float y, float z)
 {
   glUniform3f(UniformLocation(name), x, y, z);
-};
+}
 
 void
 Shader::SetVector3(std::string_view const name, glm::vec3 const& vec)
