@@ -1,4 +1,4 @@
-#include "isosurface.h"
+#include "Isosurface.hpp"
 
 Isosurface::Isosurface(std::vector<float> scalar_field)
   : scalar_field_(scalar_field)

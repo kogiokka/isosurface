@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Isosurface.hpp"
+
+#include "glm/glm.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
@@ -9,9 +13,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "glm/glm.hpp"
-#include "isosurface.h"
 
 class Model
 {

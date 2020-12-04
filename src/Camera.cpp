@@ -1,4 +1,4 @@
-#include "camera.h"
+#include "Camera.hpp"
 
 Camera::Camera()
   : world_up_{0.f, 1.f, 0.f}

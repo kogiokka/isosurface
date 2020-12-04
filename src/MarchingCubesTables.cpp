@@ -1,4 +1,4 @@
-#include "marching_cubes_tables.h"
+#include "MarchingCubesTables.hpp"
 
 namespace cube
 {

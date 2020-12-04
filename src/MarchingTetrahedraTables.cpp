@@ -1,4 +1,4 @@
-#include "marching_tetrahedra_tables.h"
+#include "MarchingTetrahedraTables.hpp"
 
 namespace tetr
 {

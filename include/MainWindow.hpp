@@ -1,15 +1,16 @@
 #pragma once
 
+#include "Camera.hpp"
+#include "Model.hpp"
 #include "SDLOpenGLWindow.hpp"
-#include "camera.h"
+#include "Shader.hpp"
+
 #include "glad/glad.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl.h"
-#include "model.h"
-#include "shader.h"
 
 #include <algorithm>
 #include <array>

@@ -1,4 +1,4 @@
-#include "model.h"
+#include "Model.hpp"
 
 Model::Model(std::filesystem::path const inf_path, std::filesystem::path const raw_path)
   : id_(0)

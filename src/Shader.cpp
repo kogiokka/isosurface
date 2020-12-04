@@ -1,4 +1,4 @@
-#include "shader.h"
+#include "Shader.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
 Shader::Shader()

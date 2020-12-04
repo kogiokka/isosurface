@@ -1,5 +1,10 @@
 #pragma once
 
+#include "MarchingCubesTables.hpp"
+#include "MarchingTetrahedraTables.hpp"
+
+#include "glm/glm.hpp"
+
 #include <algorithm>
 #include <array>
 #include <bitset>
@@ -7,10 +12,6 @@
 #include <iostream>
 #include <utility>
 #include <vector>
-
-#include "glm/glm.hpp"
-#include "marching_cubes_tables.h"
-#include "marching_tetrahedra_tables.h"
 
 class Isosurface
 {
