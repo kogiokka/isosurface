@@ -25,14 +25,14 @@ class MainWindow : public SDLOpenGLWindow
   int vertexCount_;
   int shaderId_;
   int guiMode_;
-  int cross_section_mode_;
+  int crossSectionDirection_;
   float isovalue_;
   GLuint vao_;
   GLuint vbo_;
-  std::filesystem::directory_entry model_dir_;
+  std::string importPath_;
   glm::vec3 center_;
   glm::vec3 model_color_;
-  glm::vec3 cross_section_point_;
+  glm::vec3 crossSectionPos_;
   std::array<std::array<float, 3>, 3> cross_section_dir_;
   std::unique_ptr<Model> model_;
   std::unique_ptr<Camera> camera_;
@@ -42,8 +42,9 @@ class MainWindow : public SDLOpenGLWindow
   MainWindow& operator=(MainWindow const&) = delete;
 
 private:
-  void ImportFonts(std::filesystem::path dir_path);
-  void GenIsosurface(std::string const& name, int method);
+  void ImportVolumeDataFiles(std::string const& path, bool recursive = false);
+  void ImportFonts(std::string const& directory);
+  void GenIsosurface(std::string const& infFile, int method);
 
 private:
   virtual void InitializeGL() override;

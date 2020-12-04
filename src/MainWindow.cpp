@@ -10,13 +10,13 @@ MainWindow::MainWindow(std::string const& name, int width, int height)
   , vertexCount_(0)
   , shaderId_(0)
   , guiMode_(0)
-  , cross_section_mode_(0)
+  , crossSectionDirection_(0)
   , isovalue_(80.f)
   , vao_(0)
-  , model_dir_("models/default")
+  , importPath_("models/default")
   , center_{0.f, 0.f, 0.f}
   , model_color_{0.f, 0.5f, 1.f}
-  , cross_section_point_{0.f, 0.f, 0.f}
+  , crossSectionPos_{0.f, 0.f, 0.f}
   , cross_section_dir_{{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}}}
   , model_(nullptr)
   , camera_(std::make_unique<Camera>())
@@ -53,13 +53,9 @@ MainWindow::InitializeGL()
   ImGuiStyle& style = ImGui::GetStyle();
   style.FrameRounding = 3.0f;
   style.FrameBorderSize = 1.0f;
-  ImportFonts("res/fonts");
 
-  for (fs::path const& entry : fs::recursive_directory_iterator(model_dir_)) {
-    if (entry.extension().string() == ".raw")
-      modelNames_.push_back(entry.stem());
-  }
-  std::sort(modelNames_.begin(), modelNames_.end());
+  ImportFonts("res/fonts");
+  ImportVolumeDataFiles(importPath_);
 
   glCreateVertexArrays(1, &vao_);
   glBindVertexArray(vao_);
@@ -96,9 +92,10 @@ MainWindow::PaintGL()
   ImGui_ImplSDL2_NewFrame(window_);
   ImGui::NewFrame();
 
+  ImVec2 const btnSize(100.0f, 30.0f);
   switch (guiMode_) {
   case 0: {
-    ImGui::Begin("Model");
+    ImGui::Begin("Isosurface");
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("Mode")) {
         if (ImGui::MenuItem("Normal")) {
@@ -116,34 +113,67 @@ MainWindow::PaintGL()
       ImGui::EndMainMenuBar();
     }
 
-    static size_t curr = 0;
+    static size_t currModel = 0;
     static int method = 0;
+    static bool cbNoResetCam = false;
+    static bool isRecursive = false;
+    static std::array<char, 512> pathInput; // Import Path
 
-    if (ImGui::BeginCombo("Select Model", modelNames_[curr].data())) {
-      for (size_t i = 0; i < modelNames_.size(); ++i) {
-        if (ImGui::Selectable(modelNames_[i].c_str(), i == curr)) {
-          curr = i;
+    if (ImGui::TreeNodeEx("Volume Data", ImGuiTreeNodeFlags_DefaultOpen)) {
+      // ImGui::InputText only works correctly with fixed-size char array.
+      std::strcpy(pathInput.data(), importPath_.c_str());
+      if (ImGui::InputTextWithHint("Import Path", ".inf file or directory", pathInput.data(), pathInput.size())) {
+        importPath_.assign(pathInput.data());
+      }
+      if (ImGui::Button("Import", btnSize)) {
+        ImportVolumeDataFiles(importPath_, isRecursive);
+        currModel = 0;
+      }
+      ImGui::SameLine();
+      ImGui::Checkbox("Recursive", &isRecursive);
+      // Hide combo and "Load" button when there is no imported data.
+      if (!modelNames_.empty()) {
+        if (ImGui::BeginCombo("Volume Data", modelNames_[currModel].c_str())) {
+          for (size_t i = 0; i < modelNames_.size(); ++i) {
+            if (ImGui::Selectable(modelNames_[i].c_str(), i == currModel)) {
+              currModel = i;
+            }
+          }
+          ImGui::EndCombo();
         }
       }
-      ImGui::EndCombo();
+      ImGui::TreePop();
     }
-    if (ImGui::RadioButton("Marching Cube", method == 0)) {
-      method = 0;
+
+    if (ImGui::TreeNodeEx("Isosurface", ImGuiTreeNodeFlags_DefaultOpen)) {
+      if (ImGui::RadioButton("Marching Cube", method == 0)) {
+        method = 0;
+      }
+      ImGui::SameLine();
+      if (ImGui::RadioButton("Marching Tetrahera", method == 1)) {
+        method = 1;
+      }
+      ImGui::InputFloat("Isovalue", &isovalue_, 10, 100, 2);
+      ImGui::ColorEdit3("##SurfaceColor", glm::value_ptr(model_color_), ImGuiColorEditFlags_NoInputs);
+      ImGui::TreePop();
+    }
+
+    ImGui::Dummy(btnSize);
+    if (ImGui::Button("Generate", btnSize)) {
+      GenIsosurface(modelNames_.at(currModel), method);
+      if (!cbNoResetCam) {
+        camera_ = std::make_unique<Camera>();
+        camera_->SetAspectRatio(width_, height_);
+        camera_->SetCenter(center_);
+      }
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("Marching Tetrahera", method == 1)) {
-      method = 1;
-    }
-    ImGui::SliderFloat("Isovalue", &isovalue_, 0.f, 2000.f);
-    if (ImGui::Button("Generate")) {
-      GenIsosurface(modelNames_.at(curr), method);
-    }
-    ImGui::ColorEdit3("Color", glm::value_ptr(model_color_));
+    ImGui::Checkbox("Do not reset the camera", &cbNoResetCam);
     ImGui::End();
   } break;
   case 1: {
-    ImGui::Begin("Model");
-    ImGui::ColorEdit3("Color", glm::value_ptr(model_color_));
+    ImGui::Begin("Isosurface");
+    ImGui::ColorEdit3("Isosurface Color", glm::value_ptr(model_color_), ImGuiColorEditFlags_NoInputs);
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("Mode")) {
         if (ImGui::MenuItem("Normal")) {
@@ -160,19 +190,19 @@ MainWindow::PaintGL()
       }
       ImGui::EndMainMenuBar();
     }
-    if (ImGui::RadioButton("X", cross_section_mode_ == 0)) {
-      cross_section_mode_ = 0;
+    if (ImGui::RadioButton("X", crossSectionDirection_ == 0)) {
+      crossSectionDirection_ = 0;
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("Y", cross_section_mode_ == 1)) {
-      cross_section_mode_ = 1;
+    if (ImGui::RadioButton("Y", crossSectionDirection_ == 1)) {
+      crossSectionDirection_ = 1;
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("Z", cross_section_mode_ == 2)) {
-      cross_section_mode_ = 2;
+    if (ImGui::RadioButton("Z", crossSectionDirection_ == 2)) {
+      crossSectionDirection_ = 2;
     }
     ImGui::SliderFloat(
-      "", &cross_section_point_[cross_section_mode_], 0.0f, center_[cross_section_mode_] * 2.0f, "%.2f");
+      "", &crossSectionPos_[crossSectionDirection_], 0.0f, center_[crossSectionDirection_] * 2.0f, "%.2f");
     ImGui::End();
   } break;
   }
@@ -192,8 +222,8 @@ MainWindow::PaintGL()
     s->SetVector3("light_color", 1.f, 1.f, 1.f);
     s->SetVector3("light_src", camera_->Position());
     s->SetVector3("model_color", model_color_);
-    s->SetVector3("cross_section.point", cross_section_point_);
-    s->SetVector3("cross_section.normal", cross_section_dir_.at(cross_section_mode_));
+    s->SetVector3("cross_section.point", crossSectionPos_);
+    s->SetVector3("cross_section.normal", cross_section_dir_.at(crossSectionDirection_));
     s->SetMatrix4("view_proj_matrix", camera_->ViewProjectionMatrix());
     s->SetVector3("view_pos", camera_->Position());
   } break;
@@ -206,24 +236,20 @@ MainWindow::PaintGL()
 }
 
 void
-MainWindow::GenIsosurface(std::string const& name, int method)
+MainWindow::GenIsosurface(std::string const& infFile, int method)
 {
   if (model_ != nullptr) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDeleteBuffers(1, &vbo_);
   }
 
-  fs::path infPath = model_dir_.path() / (name + ".inf");
-  model_ = std::make_unique<Model>(infPath);
+  model_ = std::make_unique<Model>(infFile);
   model_->GenIsosurface(isovalue_, method);
   vertexCount_ = model_->VertexCount();
 
   glCreateBuffers(1, &vbo_);
   glNamedBufferStorage(vbo_, 2 * vertexCount_ * sizeof(float), model_->RenderData(), GL_DYNAMIC_STORAGE_BIT);
   center_ = model_->Center();
-  camera_ = std::make_unique<Camera>();
-  camera_->SetAspectRatio(width_, height_);
-  camera_->SetCenter(center_);
 
   unsigned int stride = 3 * sizeof(float);
   // Interleaved data
@@ -232,13 +258,49 @@ MainWindow::GenIsosurface(std::string const& name, int method)
 }
 
 void
-MainWindow::ImportFonts(std::filesystem::path dir_path)
+MainWindow::ImportVolumeDataFiles(std::string const& path, bool recursive)
 {
-  if (!fs::exists(dir_path) || !fs::is_directory(dir_path))
+  namespace fs = std::filesystem;
+
+  modelNames_.clear();
+  if (!fs::exists(path)) {
+    std::cerr << "Non-existent path: \"" << path << "\"\n";
+    return;
+  }
+
+  auto const options = fs::directory_options::skip_permission_denied;
+
+  if (fs::is_directory(path)) {
+    if (recursive) {
+      for (auto const& entry : fs::recursive_directory_iterator(path, options)) {
+        if (!entry.is_regular_file())
+          continue;
+        if (entry.path().extension() != ".inf")
+          continue;
+        modelNames_.emplace_back(entry.path().string());
+      }
+    } else {
+      for (auto const& entry : fs::directory_iterator(path, options)) {
+        if (!entry.is_regular_file())
+          continue;
+        if (entry.path().extension() != ".inf")
+          continue;
+        modelNames_.emplace_back(entry.path().string());
+      }
+    }
+  } else if (fs::is_regular_file(path)) {
+    modelNames_.emplace_back(path);
+  }
+}
+
+void
+MainWindow::ImportFonts(std::string const& directory)
+{
+  if (!fs::exists(directory) || !fs::is_directory(directory))
     return;
 
   ImGuiIO& io = ImGui::GetIO();
-  for (fs::directory_entry const& entry : fs::recursive_directory_iterator(dir_path)) {
+  for (fs::directory_entry const& entry : fs::recursive_directory_iterator(directory)) {
     if (!entry.is_regular_file())
       continue;
     auto const& ext = entry.path().extension().string();
