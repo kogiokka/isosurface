@@ -20,7 +20,8 @@ MainWindow::MainWindow(std::string const& name, int width, int height)
   , cross_section_dir_{{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}}}
   , model_(nullptr)
   , camera_(std::make_unique<Camera>())
-  , shaders_(0)
+  , shaders_{}
+  , modelFiles_{}
 {
 }
 
@@ -120,6 +121,17 @@ MainWindow::PaintGL()
     static std::array<char, 512> pathInput; // Import Path
 
     if (ImGui::TreeNodeEx("Volume Data", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+      if (!modelFiles_.empty()) {
+        if (ImGui::BeginCombo("Volume Data", modelFiles_[currModel].filename().c_str())) {
+          for (size_t i = 0; i < modelFiles_.size(); ++i) {
+            if (ImGui::Selectable(modelFiles_[i].filename().c_str(), i == currModel)) {
+              currModel = i;
+            }
+          }
+          ImGui::EndCombo();
+        }
+      }
       // ImGui::InputText only works correctly with fixed-size char array.
       std::strcpy(pathInput.data(), importPath_.c_str());
       if (ImGui::InputTextWithHint("Import Path", ".inf file or directory", pathInput.data(), pathInput.size())) {
@@ -131,17 +143,7 @@ MainWindow::PaintGL()
       }
       ImGui::SameLine();
       ImGui::Checkbox("Recursive", &isRecursive);
-      // Hide combo and "Load" button when there is no imported data.
-      if (!modelNames_.empty()) {
-        if (ImGui::BeginCombo("Volume Data", modelNames_[currModel].c_str())) {
-          for (size_t i = 0; i < modelNames_.size(); ++i) {
-            if (ImGui::Selectable(modelNames_[i].c_str(), i == currModel)) {
-              currModel = i;
-            }
-          }
-          ImGui::EndCombo();
-        }
-      }
+
       ImGui::TreePop();
     }
 
@@ -159,16 +161,18 @@ MainWindow::PaintGL()
     }
 
     ImGui::Dummy(btnSize);
-    if (ImGui::Button("Generate", btnSize)) {
-      GenIsosurface(modelNames_.at(currModel), method);
-      if (!cbNoResetCam) {
-        camera_ = std::make_unique<Camera>();
-        camera_->SetAspectRatio(width_, height_);
-        camera_->SetCenter(center_);
+    if (!modelFiles_.empty()) {
+      if (ImGui::Button("Generate", btnSize)) {
+        GenIsosurface(modelFiles_.at(currModel), method);
+        if (!cbNoResetCam) {
+          camera_ = std::make_unique<Camera>();
+          camera_->SetAspectRatio(width_, height_);
+          camera_->SetCenter(center_);
+        }
       }
+      ImGui::SameLine();
+      ImGui::Checkbox("Do not reset the camera", &cbNoResetCam);
     }
-    ImGui::SameLine();
-    ImGui::Checkbox("Do not reset the camera", &cbNoResetCam);
     ImGui::End();
   } break;
   case 1: {
@@ -262,7 +266,7 @@ MainWindow::ImportVolumeDataFiles(std::string const& path, bool recursive)
 {
   namespace fs = std::filesystem;
 
-  modelNames_.clear();
+  modelFiles_.clear();
   if (!fs::exists(path)) {
     std::cerr << "Non-existent path: \"" << path << "\"\n";
     return;
@@ -277,7 +281,7 @@ MainWindow::ImportVolumeDataFiles(std::string const& path, bool recursive)
           continue;
         if (entry.path().extension() != ".inf")
           continue;
-        modelNames_.emplace_back(entry.path().string());
+        modelFiles_.emplace_back(entry.path());
       }
     } else {
       for (auto const& entry : fs::directory_iterator(path, options)) {
@@ -285,11 +289,11 @@ MainWindow::ImportVolumeDataFiles(std::string const& path, bool recursive)
           continue;
         if (entry.path().extension() != ".inf")
           continue;
-        modelNames_.emplace_back(entry.path().string());
+        modelFiles_.emplace_back(entry.path());
       }
     }
   } else if (fs::is_regular_file(path)) {
-    modelNames_.emplace_back(path);
+    modelFiles_.emplace_back(path);
   }
 }
 

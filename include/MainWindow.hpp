@@ -18,6 +18,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <filesystem>
 #include <vector>
 
 class MainWindow : public SDLOpenGLWindow
@@ -37,7 +38,7 @@ class MainWindow : public SDLOpenGLWindow
   std::unique_ptr<Model> model_;
   std::unique_ptr<Camera> camera_;
   std::vector<std::unique_ptr<Shader>> shaders_;
-  std::vector<std::string> modelNames_;
+  std::vector<std::filesystem::path> modelFiles_;
   MainWindow(MainWindow const&) = delete;
   MainWindow& operator=(MainWindow const&) = delete;
 
