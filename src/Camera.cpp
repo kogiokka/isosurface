@@ -1,10 +1,14 @@
 #include "Camera.hpp"
+#include <iostream>
+
+float static constexpr MATH_PI = 3.14159265f;
+float static constexpr MATH_2_PI = MATH_PI * 2.0f;
 
 Camera::Camera()
   : world_up_{0.f, 1.f, 0.f}
   , center_{0.f, 0.f, 0.f}
-  , theta_(0.3f)
-  , phi_(1.4f)
+  , phi_(0.3f)
+  , theta_(MATH_PI * 0.5f)
   , radius_(600.f)
   , aspect_ratio_(0.f)
   , view_volume_size_(200.f)
@@ -19,7 +23,7 @@ Camera::Camera()
 Camera::~Camera() {}
 
 glm::vec3
-Camera::CartesianCoord(float theta, float phi) const
+Camera::CartesianCoord( float phi, float theta) const
 {
   using namespace std;
 
@@ -28,7 +32,7 @@ Camera::CartesianCoord(float theta, float phi) const
   float const sin_t = sinf(theta);
   float const cos_t = cosf(theta);
 
-  return glm::vec3{sin_p * cos_t, cos_p, sin_p * sin_t};
+  return glm::vec3{sin_t * cos_p, cos_t, sin_p * sin_t};
 }
 
 void
@@ -36,10 +40,8 @@ Camera::UpdateViewCoord()
 {
   using namespace glm;
 
-  constexpr float degree_45 = 0.785f;
-  world_up_ = normalize(-radius_ * CartesianCoord(theta_, phi_ + degree_45));
-
-  position_ = radius_ * CartesianCoord(theta_, phi_) + center_;
+  world_up_ = normalize(-radius_ * CartesianCoord(phi_, theta_ + MATH_PI * 0.25f));
+  position_ = radius_ * CartesianCoord(phi_, theta_) + center_;
   forward_ = normalize(center_ - position_);
   side_ = normalize(cross(forward_, world_up_));
   up_ = cross(side_, forward_);
@@ -48,15 +50,13 @@ Camera::UpdateViewCoord()
 void
 Camera::InitDragRotation(int x, int y)
 {
-  constexpr float half = 3.1415926f;
-
   // Phi has been set between 0 and 360 degrees
-  if (phi_ > half)
+  if (theta_ > MATH_PI)
     horiz_rotate_dir = -1;
   else
     horiz_rotate_dir = 1;
 
-  rotation_origin_ = std::make_tuple(x, y, theta_, phi_);
+  rotation_origin_ = std::make_tuple(x, y, phi_, theta_);
 }
 
 void
@@ -64,8 +64,8 @@ Camera::DragRotation(int x, int y)
 {
   auto const [x_o, y_o, theta_o, phi_o] = rotation_origin_;
 
-  theta_ = NormRadian(horiz_rotate_dir * (x - x_o) * rotate_rate_ + theta_o);
-  phi_ = NormRadian(-(y - y_o) * rotate_rate_ + phi_o);
+  phi_ = NormRadian(horiz_rotate_dir * (x - x_o) * rotate_rate_ + theta_o);
+  theta_ = NormRadian(-(y - y_o) * rotate_rate_ + phi_o);
 
   UpdateViewCoord();
 }
@@ -115,14 +115,14 @@ Camera::SetCenter(glm::vec3 center)
 void
 Camera::SetPhi(float phi)
 {
-  phi_ = NormRadian(phi);
+  theta_ = NormRadian(phi);
   UpdateViewCoord();
 }
 
 void
 Camera::SetTheta(float theta)
 {
-  theta_ = NormRadian(theta);
+  phi_ = NormRadian(theta);
   UpdateViewCoord();
 }
 
@@ -199,21 +199,21 @@ Camera::Turning(Camera::Rotate direction)
 {
   switch (direction) {
   case Rotate::kClockwise:
-    theta_ = theta_ + 0.1f;
+    phi_ = phi_ + 0.1f;
     break;
   case Rotate::kCounterClockwise:
-    theta_ = theta_ - 0.1f;
-    break;
-  case Rotate::kPitchUp:
     phi_ = phi_ - 0.1f;
     break;
+  case Rotate::kPitchUp:
+    theta_ = theta_ - 0.1f;
+    break;
   case Rotate::kPitchDown:
-    phi_ = phi_ + 0.1f;
+    theta_ = theta_ + 0.1f;
     break;
   }
 
-  phi_ = NormRadian(phi_);
   theta_ = NormRadian(theta_);
+  phi_ = NormRadian(phi_);
   UpdateViewCoord();
 }
 
@@ -221,12 +221,10 @@ Camera::Turning(Camera::Rotate direction)
 float
 Camera::NormRadian(float radian)
 {
-  constexpr float full = 6.2831853f;
-
   if (radian < 0.f)
-    return radian + full;
-  else if (radian > full)
-    return radian - full;
+    return radian + MATH_2_PI;
+  else if (radian > MATH_2_PI)
+    return radian - MATH_2_PI;
   else
     return radian;
 }

@@ -13,8 +13,8 @@ class Camera
   glm::vec3 side_;
   glm::vec3 up_;
   glm::vec3 center_;
-  float theta_;
   float phi_;
+  float theta_;
   float radius_;
   float aspect_ratio_;
   float view_volume_size_;
