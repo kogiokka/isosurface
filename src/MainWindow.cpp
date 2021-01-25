@@ -119,10 +119,10 @@ MainWindow::PaintGL()
     static bool cbNoResetCam = false;
     static bool isRecursive = false;
     static std::array<char, 512> pathInput; // Import Path
-
-    if (ImGui::TreeNodeEx("Volume Data", ImGuiTreeNodeFlags_DefaultOpen)) {
-
-      if (!modelFiles_.empty()) {
+    if (ImGui::TreeNodeEx("Isosurface", ImGuiTreeNodeFlags_DefaultOpen)) {
+      if (modelFiles_.empty()) {
+        ImGui::Text("No available volume data.\nChoose another path to import file(s)!");
+      } else {
         if (ImGui::BeginCombo("Volume Data", modelFiles_[currModel].filename().c_str())) {
           for (size_t i = 0; i < modelFiles_.size(); ++i) {
             if (ImGui::Selectable(modelFiles_[i].filename().c_str(), i == currModel)) {
@@ -132,6 +132,30 @@ MainWindow::PaintGL()
           ImGui::EndCombo();
         }
       }
+      ImGui::InputFloat("Isovalue", &isovalue_, 10, 100, 2);
+      if (ImGui::RadioButton("Marching Cube", method == 0)) {
+        method = 0;
+      }
+      if (ImGui::RadioButton("Marching Tetrahera", method == 1)) {
+        method = 1;
+      }
+      ImGui::ColorEdit3("Color##SurfaceColor", glm::value_ptr(model_color_), ImGuiColorEditFlags_NoInputs);
+      if (!modelFiles_.empty()) {
+        if (ImGui::Button("Generate", btnSize)) {
+          GenIsosurface(modelFiles_.at(currModel), method);
+          if (!cbNoResetCam) {
+            camera_ = std::make_unique<Camera>();
+            camera_->SetAspectRatio(width_, height_);
+            camera_->SetCenter(center_);
+          }
+        }
+        ImGui::SameLine();
+        ImGui::Checkbox("Do not reset the camera", &cbNoResetCam);
+      }
+      ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Import Volume Data From Path")) {
       // ImGui::InputText only works correctly with fixed-size char array.
       std::strcpy(pathInput.data(), importPath_.c_str());
       if (ImGui::InputTextWithHint("Import Path", ".inf file or directory", pathInput.data(), pathInput.size())) {
@@ -147,32 +171,6 @@ MainWindow::PaintGL()
       ImGui::TreePop();
     }
 
-    if (ImGui::TreeNodeEx("Isosurface", ImGuiTreeNodeFlags_DefaultOpen)) {
-      if (ImGui::RadioButton("Marching Cube", method == 0)) {
-        method = 0;
-      }
-      ImGui::SameLine();
-      if (ImGui::RadioButton("Marching Tetrahera", method == 1)) {
-        method = 1;
-      }
-      ImGui::InputFloat("Isovalue", &isovalue_, 10, 100, 2);
-      ImGui::ColorEdit3("##SurfaceColor", glm::value_ptr(model_color_), ImGuiColorEditFlags_NoInputs);
-      ImGui::TreePop();
-    }
-
-    ImGui::Dummy(btnSize);
-    if (!modelFiles_.empty()) {
-      if (ImGui::Button("Generate", btnSize)) {
-        GenIsosurface(modelFiles_.at(currModel), method);
-        if (!cbNoResetCam) {
-          camera_ = std::make_unique<Camera>();
-          camera_->SetAspectRatio(width_, height_);
-          camera_->SetCenter(center_);
-        }
-      }
-      ImGui::SameLine();
-      ImGui::Checkbox("Do not reset the camera", &cbNoResetCam);
-    }
     ImGui::End();
   } break;
   case 1: {
