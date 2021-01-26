@@ -11,7 +11,7 @@
 
 class VolumeData
 {
-  enum class DataType { UnsignedChar, UnsignedShort, Float };
+  enum class DataType { UnsignedChar, UnsignedShort, Float, Short };
   std::unordered_map<std::string, std::string> info_;
   glm::ivec3 resolution_;
   glm::vec3 ratio_;

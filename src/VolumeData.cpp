@@ -149,6 +149,8 @@ VolumeData::Read()
     dataType_ = DataType::UnsignedShort;
   } else if (type == "float") {
     dataType_ = DataType::Float;
+  } else if (type == "short") {
+    dataType_ = DataType::Short;
   } else {
     cerr << "Unknown model data type: \"" << type.c_str() << "\"\n";
     return false;
@@ -185,6 +187,16 @@ VolumeData::Read()
     if (info_.at(KEY.Endian) == "big") {
       for (auto& n : buffer) {
         n = util::endian::BigToLittle<float>(n);
+      }
+    }
+    scalarField_.assign(buffer.begin(), buffer.end());
+  } break;
+  case DataType::Short: {
+    vector<int16_t> buffer(file_size / sizeof(int16_t));
+    rawFile.read(reinterpret_cast<char*>(buffer.data()), file_size);
+    if (info_.at(KEY.Endian) == "big") {
+      for (auto& n : buffer) {
+        n = util::endian::BigToLittle<short>(n);
       }
     }
     scalarField_.assign(buffer.begin(), buffer.end());
