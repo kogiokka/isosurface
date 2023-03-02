@@ -1,8 +1,11 @@
 # Isosurface
-Student ID: 00353044
-Student Name: 高鈺家
+
+An Isosurface demo program.
+This program demonstrate the use of Marching Cube and Marching Tetrahedra.
+With a given isovalue, we can extract the isosurface from a volumetric data.
 
 ## Control
- - Mouse Right Button: Turning camera
- - Mouse Left Button: Shifting camera
- - Mouse Wheen: Zooming In/Out
+
+ * RMB: Turning camera
+ * LMB: Moving camera
+ * Mouse Wheel: Zooming In/Out
