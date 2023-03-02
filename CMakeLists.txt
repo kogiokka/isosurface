@@ -2,16 +2,7 @@ cmake_minimum_required(VERSION 3.12.4)
 
 project("Isosurface")
 
-find_package(OpenGL REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(glm QUIET)
-
-if(NOT glm_FOUND)
-    include(FetchContent)
-    include("cmake/glm.cmake")
-endif()
-
-include("cmake/glad.cmake")
+include("cmake/deps.cmake")
 
 add_executable(isosurface)
 
@@ -34,12 +25,10 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 include_directories(include/)
-include_directories(ext/imgui/)
 
 file(GLOB sourceFiles CONFIGURE_DEPENDS
     "src/*.cc"
     "src/*.cpp"
-    "ext/imgui/*.cpp"
 )
 
 target_sources(isosurface PRIVATE ${sourceFiles})
@@ -49,6 +38,7 @@ target_link_libraries(isosurface PRIVATE
     SDL2::SDL2
     glm::glm
     glad
+    imgui
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

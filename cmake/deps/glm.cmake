@@ -1,3 +1,9 @@
+find_package(glm QUIET)
+
+if(glm_FOUND)
+    return()
+endif()
+
 FetchContent_Declare(
     glm
     URL "https://github.com/g-truc/glm/releases/download/0.9.9.8/glm-0.9.9.8.7z"
