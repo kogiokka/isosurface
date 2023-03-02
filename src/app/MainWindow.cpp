@@ -13,7 +13,7 @@ MainWindow::MainWindow(std::string const& name, int width, int height)
   , crossSectionDirection_(0)
   , isovalue_(80.f)
   , vao_(0)
-  , importPath_("models/default")
+  , importPath_("data/demo")
   , center_{0.f, 0.f, 0.f}
   , model_color_{0.f, 0.5f, 1.f}
   , crossSectionPos_{0.f, 0.f, 0.f}
@@ -55,7 +55,7 @@ MainWindow::InitializeGL()
   style.FrameRounding = 3.0f;
   style.FrameBorderSize = 1.0f;
 
-  ImportFonts("res/fonts");
+  ImportFonts("fonts/");
   ImportVolumeDataFiles(importPath_);
 
   glCreateVertexArrays(1, &vao_);
