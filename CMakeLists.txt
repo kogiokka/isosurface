@@ -4,6 +4,14 @@ project("Isosurface")
 
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
+find_package(glm QUIET)
+
+if(NOT glm_FOUND)
+    include(FetchContent)
+    include("cmake/glm.cmake")
+endif()
+
+include("cmake/glad.cmake")
 
 add_executable(isosurface)
 
@@ -12,8 +20,6 @@ set_target_properties(isosurface PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
-
-include("cmake/glad.cmake")
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(isosurface PRIVATE $<$<CONFIG:Debug>:-Wall -Wextra -pedantic-errors -ggdb>)
@@ -29,8 +35,6 @@ endif()
 
 include_directories(include/)
 include_directories(ext/imgui/)
-
-add_subdirectory(ext/glm)
 
 file(GLOB sourceFiles CONFIGURE_DEPENDS
     "src/*.cc"
