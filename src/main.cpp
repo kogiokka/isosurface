@@ -2,7 +2,7 @@
 #include <iostream>
 
 int
-main()
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
   MainWindow app("Isosurface", 800, 800);
   app.Show();
