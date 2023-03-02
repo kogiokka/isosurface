@@ -132,7 +132,7 @@ MainWindow::PaintGL()
           ImGui::EndCombo();
         }
       }
-      ImGui::InputFloat("Isovalue", &isovalue_, 10, 100, 2);
+      ImGui::InputFloat("Isovalue", &isovalue_, 10, 100, "%.2f");
       if (ImGui::RadioButton("Marching Cube", method == 0)) {
         method = 0;
       }
@@ -175,7 +175,6 @@ MainWindow::PaintGL()
   } break;
   case 1: {
     ImGui::Begin("Isosurface");
-    ImGui::ColorEdit3("Isosurface Color", glm::value_ptr(model_color_), ImGuiColorEditFlags_NoInputs);
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("Mode")) {
         if (ImGui::MenuItem("Normal")) {
@@ -192,6 +191,7 @@ MainWindow::PaintGL()
       }
       ImGui::EndMainMenuBar();
     }
+    ImGui::ColorEdit3("Isosurface Color", glm::value_ptr(model_color_), ImGuiColorEditFlags_NoInputs);
     if (ImGui::RadioButton("X", crossSectionDirection_ == 0)) {
       crossSectionDirection_ = 0;
     }
@@ -204,7 +204,7 @@ MainWindow::PaintGL()
       crossSectionDirection_ = 2;
     }
     ImGui::SliderFloat(
-      "", &crossSectionPos_[crossSectionDirection_], 0.0f, center_[crossSectionDirection_] * 2.0f, "%.2f");
+      "##slider", &crossSectionPos_[crossSectionDirection_], 0.0f, center_[crossSectionDirection_] * 2.0f, "%.2f");
     ImGui::End();
   } break;
   }
