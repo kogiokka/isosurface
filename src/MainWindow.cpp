@@ -123,9 +123,9 @@ MainWindow::PaintGL()
       if (modelFiles_.empty()) {
         ImGui::Text("No available volume data.\nChoose another path to import file(s)!");
       } else {
-        if (ImGui::BeginCombo("Volume Data", modelFiles_[currModel].filename().c_str())) {
+        if (ImGui::BeginCombo("Volume Data", modelFiles_[currModel].filename().string().c_str())) {
           for (size_t i = 0; i < modelFiles_.size(); ++i) {
-            if (ImGui::Selectable(modelFiles_[i].filename().c_str(), i == currModel)) {
+            if (ImGui::Selectable(modelFiles_[i].filename().string().c_str(), i == currModel)) {
               currModel = i;
             }
           }
@@ -142,7 +142,7 @@ MainWindow::PaintGL()
       ImGui::ColorEdit3("Color##SurfaceColor", glm::value_ptr(model_color_), ImGuiColorEditFlags_NoInputs);
       if (!modelFiles_.empty()) {
         if (ImGui::Button("Generate", btnSize)) {
-          GenIsosurface(modelFiles_.at(currModel), method);
+          GenIsosurface(modelFiles_.at(currModel).string(), method);
           if (!cbNoResetCam) {
             camera_ = std::make_unique<Camera>();
             camera_->SetAspectRatio(width_, height_);
@@ -308,7 +308,7 @@ MainWindow::ImportFonts(std::string const& directory)
     auto const& ext = entry.path().extension().string();
     if (ext != ".ttf" && ext != ".otf")
       continue;
-    io.Fonts->AddFontFromFileTTF(entry.path().c_str(), 18);
+    io.Fonts->AddFontFromFileTTF(entry.path().string().c_str(), 18);
   }
 }
 
