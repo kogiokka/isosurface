@@ -313,7 +313,7 @@ MainWindow::ImportFonts(std::string const& directory)
 }
 
 void
-MainWindow::OnProcessEvent(const SDL_Event& event)
+MainWindow::OnProcessEvent(SDL_Event const& event)
 {
   ImGui_ImplSDL2_ProcessEvent(&event);
   auto const& io = ImGui::GetIO();
@@ -325,13 +325,13 @@ MainWindow::OnProcessEvent(const SDL_Event& event)
 }
 
 void
-MainWindow::OnWindowResized()
+MainWindow::OnWindowEvent(SDL_WindowEvent const&)
 {
   camera_->SetAspectRatio(width_, height_);
 }
 
 void
-MainWindow::OnKeyDown(SDL_KeyboardEvent const& keydown)
+MainWindow::OnKeyDownEvent(SDL_KeyboardEvent const& keydown)
 {
   switch (keydown.keysym.sym) {
   case SDLK_w:
@@ -363,16 +363,11 @@ MainWindow::OnKeyDown(SDL_KeyboardEvent const& keydown)
     camera_->SetAspectRatio(width_, height_);
     camera_->SetCenter(center_);
     break;
-  case SDLK_q:
-    if (keydown.keysym.mod & KMOD_CTRL) {
-      isAlive_ = false;
-    }
-    break;
   }
 }
 
 void
-MainWindow::OnMouseButtonDown(SDL_MouseButtonEvent const& buttonDown)
+MainWindow::OnMouseButtonDownEvent(SDL_MouseButtonEvent const& buttonDown)
 {
   switch (buttonDown.button) {
   case SDL_BUTTON_LEFT:
@@ -385,13 +380,13 @@ MainWindow::OnMouseButtonDown(SDL_MouseButtonEvent const& buttonDown)
 }
 
 void
-MainWindow::OnMouseWheel(SDL_MouseWheelEvent const& wheel)
+MainWindow::OnMouseWheelEvent(SDL_MouseWheelEvent const& wheel)
 {
   camera_->WheelZoom(-wheel.y);
 }
 
 void
-MainWindow::OnMouseMotion(SDL_MouseMotionEvent const& motion)
+MainWindow::OnMouseMotionEvent(SDL_MouseMotionEvent const& motion)
 {
   switch (motion.state) {
   case SDL_BUTTON_LMASK:
