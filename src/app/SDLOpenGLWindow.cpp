@@ -8,12 +8,12 @@
 #include "SDLOpenGLWindow.hpp"
 
 SDLOpenGLWindow::SDLOpenGLWindow(std::string const& title, int width, int height)
-  : shouldClose_(false)
-  , shallSkipSDLEvent_(false)
-  , width_(width)
+  : width_(width)
   , height_(height)
   , window_(nullptr)
   , glContext_(nullptr)
+  , shouldClose_(false)
+  , shouldProcessEvent_(true)
 {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
@@ -58,72 +58,69 @@ SDLOpenGLWindow::Show()
 
   while (!shouldClose_) {
     SDL_Event event;
-    HandleEvent(event);
+    while (SDL_PollEvent(&event)) {
+      switch (event.type) {
+      case SDL_QUIT:
+        Close();
+        break;
+      case SDL_WINDOWEVENT:
+        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+          SDL_GetWindowSize(window_, &width_, &height_);
+        }
+        break;
+      }
+
+      OnPreProcessEvent(event);
+      ExecuteEventHandlers(event);
+    }
     PaintGL(); // Require implementation
   }
 }
 
 void
-SDLOpenGLWindow::HandleEvent(SDL_Event event)
+SDLOpenGLWindow::Close()
 {
-  while (SDL_PollEvent(&event)) {
-
-    switch (event.type) {
-    case SDL_QUIT:
-      shouldClose_ = true;
-      break;
-    case SDL_KEYDOWN:
-      if (event.key.keysym.sym == SDLK_q) {
-        if (event.key.keysym.mod & KMOD_CTRL) {
-          shouldClose_ = true;
-        }
-      }
-      break;
-    case SDL_WINDOWEVENT:
-      if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-        SDL_GetWindowSize(window_, &width_, &height_);
-      }
-      break;
-    }
-
-    OnProcessEvent(event);
-
-    if (shallSkipSDLEvent_)
-      continue;
-
-    switch (event.type) {
-    case SDL_KEYDOWN:
-      OnKeyDownEvent(event.key);
-      break;
-    case SDL_KEYUP:
-      OnKeyUpEvent(event.key);
-      break;
-    case SDL_MOUSEBUTTONDOWN:
-      OnMouseButtonDownEvent(event.button);
-      break;
-    case SDL_MOUSEBUTTONUP:
-      OnMouseButtonUpEvent(event.button);
-      break;
-    case SDL_MOUSEMOTION:
-      OnMouseMotionEvent(event.motion);
-      break;
-    case SDL_MOUSEWHEEL:
-      OnMouseWheelEvent(event.wheel);
-      break;
-    case SDL_WINDOWEVENT:
-      OnWindowEvent(event.window);
-      break;
-    case SDL_QUIT:
-      shouldClose_ = true;
-      break;
-    }
-  }
+  shouldClose_ = true;
 }
 
 void
-SDLOpenGLWindow::OnProcessEvent(SDL_Event const&)
+SDLOpenGLWindow::SetShouldProcessEvent(bool isAccepting)
 {
-  return; // Override this function to do things.
+  shouldProcessEvent_ = isAccepting;
+}
+
+void
+SDLOpenGLWindow::ExecuteEventHandlers(SDL_Event& event)
+{
+  if (!shouldProcessEvent_)
+    return;
+
+  switch (event.type) {
+  case SDL_KEYDOWN:
+    OnKeyDownEvent(event.key);
+    break;
+  case SDL_KEYUP:
+    OnKeyUpEvent(event.key);
+    break;
+  case SDL_MOUSEBUTTONDOWN:
+    OnMouseButtonDownEvent(event.button);
+    break;
+  case SDL_MOUSEBUTTONUP:
+    OnMouseButtonUpEvent(event.button);
+    break;
+  case SDL_MOUSEMOTION:
+    OnMouseMotionEvent(event.motion);
+    break;
+  case SDL_MOUSEWHEEL:
+    OnMouseWheelEvent(event.wheel);
+    break;
+  case SDL_WINDOWEVENT:
+    OnWindowEvent(event.window);
+    break;
+  case SDL_QUIT:
+    shouldClose_ = true;
+    break;
+  }
 }
 
 void
@@ -166,4 +163,10 @@ void
 SDLOpenGLWindow::OnWindowEvent(SDL_WindowEvent const&)
 {
   return; // Override this function to do things.
+}
+
+void
+SDLOpenGLWindow::OnPreProcessEvent(SDL_Event const&)
+{
+  return;
 }

@@ -12,10 +12,10 @@ public:
   virtual void InitializeGL() = 0;
   virtual void PaintGL() = 0;
   void Show();
+  void Close();
+  void SetShouldProcessEvent(bool isAccepting);
 
 protected:
-  void GlobalEventHandler(SDL_Event& event);
-  void HandleEvent(SDL_Event event);
   virtual void OnKeyDownEvent(SDL_KeyboardEvent const& key);
   virtual void OnKeyUpEvent(SDL_KeyboardEvent const& key);
   virtual void OnMouseButtonDownEvent(SDL_MouseButtonEvent const& button);
@@ -23,13 +23,21 @@ protected:
   virtual void OnMouseMotionEvent(SDL_MouseMotionEvent const& motion);
   virtual void OnMouseWheelEvent(SDL_MouseWheelEvent const& wheel);
   virtual void OnWindowEvent(SDL_WindowEvent const& window);
-  virtual void OnProcessEvent(SDL_Event const& event);
+  virtual void OnPreProcessEvent(SDL_Event const& event);
+
+private:
+  void ExecuteEventHandlers(SDL_Event& event);
 
 protected:
-  bool shouldClose_;
-  bool shallSkipSDLEvent_;
   int width_;
   int height_;
   SDL_Window* window_;
   SDL_GLContext glContext_;
+
+private:
+  bool shouldClose_;
+  bool shouldProcessEvent_;
 };
+
+
+

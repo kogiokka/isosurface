@@ -313,24 +313,6 @@ MainWindow::ImportFonts(std::string const& directory)
 }
 
 void
-MainWindow::OnProcessEvent(SDL_Event const& event)
-{
-  ImGui_ImplSDL2_ProcessEvent(&event);
-  auto const& io = ImGui::GetIO();
-  if (io.WantCaptureMouse || io.WantCaptureKeyboard) {
-    shallSkipSDLEvent_ = true;
-    return;
-  }
-  shallSkipSDLEvent_ = false;
-}
-
-void
-MainWindow::OnWindowEvent(SDL_WindowEvent const&)
-{
-  camera_->SetAspectRatio(width_, height_);
-}
-
-void
 MainWindow::OnKeyDownEvent(SDL_KeyboardEvent const& keydown)
 {
   switch (keydown.keysym.sym) {
@@ -394,6 +376,30 @@ MainWindow::OnMouseMotionEvent(SDL_MouseMotionEvent const& motion)
     break;
   case SDL_BUTTON_RMASK:
     camera_->DragRotation(motion.x, motion.y);
+    break;
+  }
+}
+
+void
+MainWindow::OnWindowEvent(SDL_WindowEvent const&)
+{
+  camera_->SetAspectRatio(width_, height_);
+}
+
+void
+MainWindow::OnPreProcessEvent(SDL_Event const& event)
+{
+  ImGui_ImplSDL2_ProcessEvent(&event);
+  auto const& io = ImGui::GetIO();
+  SetShouldProcessEvent(!(io.WantCaptureMouse || io.WantCaptureKeyboard));
+
+  switch (event.type) {
+  case SDL_KEYDOWN:
+    if (event.key.keysym.sym == SDLK_q) {
+      if (event.key.keysym.mod & KMOD_CTRL) {
+        Close();
+      }
+    }
     break;
   }
 }

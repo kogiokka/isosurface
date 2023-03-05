@@ -50,12 +50,12 @@ private:
 private:
   virtual void InitializeGL() override;
   virtual void PaintGL() override;
-  virtual void OnProcessEvent(SDL_Event const& event) override;
-  virtual void OnWindowEvent(SDL_WindowEvent const& window) override;
   virtual void OnMouseButtonDownEvent(SDL_MouseButtonEvent const& buttonDown) override;
   virtual void OnMouseWheelEvent(SDL_MouseWheelEvent const& wheel) override;
   virtual void OnMouseMotionEvent(SDL_MouseMotionEvent const& motion) override;
   virtual void OnKeyDownEvent(SDL_KeyboardEvent const& keydown) override;
+  virtual void OnWindowEvent(SDL_WindowEvent const& window) override;
+  virtual void OnPreProcessEvent(SDL_Event const& event) override;
 
 public:
   MainWindow(std::string const& name, int width, int height);
