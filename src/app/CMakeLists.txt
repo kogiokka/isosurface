@@ -51,7 +51,6 @@ PRIVATE
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(isosurface PRIVATE SDL2::SDL2main)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
         target_link_libraries(isosurface PRIVATE stdc++fs) # C++ filesystem
     endif()
