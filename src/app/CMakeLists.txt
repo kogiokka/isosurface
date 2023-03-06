@@ -66,6 +66,14 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_link_libraries(isosurface PRIVATE SDL2::SDL2main)
 endif()
 
+if (WIN32)
+    add_custom_command(TARGET isosurface POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:SDL2::SDL2>"
+        "$<TARGET_FILE_DIR:isosurface>"
+    )
+endif()
+
 add_custom_command(TARGET isosurface POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_CURRENT_SOURCE_DIR}/shader"
