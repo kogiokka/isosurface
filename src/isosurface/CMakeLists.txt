@@ -1,5 +1,3 @@
-include("${CMAKE_SOURCE_DIR}/cmake/deps.cmake")
-
 add_executable(isosurface)
 
 set_target_properties(isosurface
